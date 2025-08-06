@@ -1,0 +1,11 @@
+{
+  "compilerOptions": {
+    "baseUrl": "./",
+    "paths": {
+      "@pages/*": ["cypress/e2e/pages/*"],
+      "@support/*": ["cypress/support/*"],
+      "@constants/*": ["cypress/support/constants/*"]
+    }
+  },
+  "include": ["cypress"]
+}
