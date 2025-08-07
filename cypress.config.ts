@@ -29,12 +29,12 @@ export default defineConfig({
       
       // If testRunKey is provided but testSuite is not, throw error
       if (testRunKey && !testSuite) {
-        throw new Error('testSuite is required when testRunKey is provided. Use testSuite=admin');
+        throw new Error('testSuite is required when testRunKey is provided (e.g., testSuite=admin)');
       }
 
       // If testSuite is not valid, throw error
-      if(suite.includes(testRunKey.toString())) {
-        throw new Error('testSuite value is invalid. Use either admin | client | api');
+      if (testSuite && !suite.includes(testSuite.toString())) {
+        throw new Error('Invalid testSuite value. Use one of: admin | client | api');
       }
       
       // Set spec pattern based on testSuite (capitalize first letter)
