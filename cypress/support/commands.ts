@@ -11,7 +11,7 @@ Cypress.Commands.add('login', (email: string, password: string) => {
   });
 });
 
-//#region QA Touch
+//#region QA Touch API Hook
 
 // Utility function to validate and prepare QATouch request
 function validateQATouchConfig(projectKey: string, testRunKey: string) {
@@ -128,5 +128,71 @@ Cypress.Commands.add('updateQATouchTestRun', (options: QATouchBulkUpdateOptions)
 
   makeQATouchRequest(projectKey, testRunKey, resultObject, comments);
 });
+
+//#endregion
+
+//#region QA Touch Case Helper
+
+let currentTestResults: TestResult[] = [];
+let currentDescribeTitle: string = '';
+
+// Bulk update all collected test results for current describe block
+Cypress.Commands.add('bulkUpdateQATouch', (options: { comments: string; projectKey?: string; testRunKey?: string }) => {
+  if (currentTestResults.length === 0) {
+    cy.log('No test results collected for current describe block, skipping bulk QATouch update');
+    return;
+  }
+
+  cy.updateQATouchTestRun({
+    results: currentTestResults,
+    comments: options.comments,
+    projectKey: options?.projectKey,
+    testRunKey: options?.testRunKey
+  });
+
+  // Clear results after update
+  currentTestResults = [];
+});
+
+afterEach(function () {
+  const sprint = Cypress.env('sprint');
+  if (!sprint) return; // Skip collection for local testing
+
+  const titlePath = this.currentTest.titlePath();
+  const describeTitle = titlePath[0];
+
+  // Reset results if we're in a new describe block
+  if (describeTitle !== currentDescribeTitle) {
+    currentTestResults = [];
+    currentDescribeTitle = describeTitle;
+    console.log(`Describe Block: ${currentDescribeTitle}`);
+  }
+
+  const caseNumber = extractCaseNumber(titlePath[1]); // e.g. "[C123] Some test"
+  if (!caseNumber) return;
+
+  let status = 4; // Default to skip
+  
+  if (this.currentTest.state === 'passed') {
+    status = 1;
+  } else if (this.currentTest.state === 'failed') {
+    status = 5
+  }
+
+  const result: TestResult = { case: caseNumber, status: status };
+  currentTestResults.push(result);
+
+  console.log(`Collected test result: ${caseNumber} = ${status} (${this.currentTest.state})`);
+});
+
+// Utility function to extract case number from test title
+function extractCaseNumber(title: string): string | null {
+  // Match patterns like "64 - Filter Currency" -> "64"
+  const match = title.match(/^(\d+)\s*-/);
+  if (match) {
+    return match[1]; // Return just the number
+  }
+  return null;
+}
 
 //#endregion

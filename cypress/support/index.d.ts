@@ -18,6 +18,11 @@ declare namespace Cypress {
      * @param options - Bulk test case update options
      */
     updateQATouchTestRun(options: QATouchBulkUpdateOptions): Chainable<void>;
-    
+
+    /**
+     * Bulk update all collected test results
+     */
+    bulkUpdateQATouch(options: { comments: string; projectKey?: string; testRunKey?: string }): Chainable<void>;
+
     }
 }
