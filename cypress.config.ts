@@ -25,7 +25,7 @@ export default defineConfig({
       const testSuite: string  = config.env.testSuite || '';
 
       // Handle sprint validation
-      const sprintVer: string  = config.env.sprint || '';
+      const sprint: string  = config.env.sprint || '';
       
       // If testRunKey is provided but testSuite is not, throw error
       if (testRunKey && !testSuite) {
@@ -44,11 +44,11 @@ export default defineConfig({
       }
 
       // No sprint provided — leave specPattern unchanged
-      if (sprintVer) {
-        if (sprintVer === 'all') {
+      if (sprint) {
+        if (sprint === 'all') {
           config.specPattern = 'cypress/e2e/tests/Sprint/*.cy.{js,jsx,ts,tsx}';
         } else {
-          config.specPattern = `cypress/e2e/tests/Sprint/${sprintVer}.cy.{js,jsx,ts,tsx}`;
+          config.specPattern = `cypress/e2e/tests/Sprint/${sprint}.cy.{js,jsx,ts,tsx}`;
         }
       }
       
@@ -58,7 +58,8 @@ export default defineConfig({
         ...environmentConfig,
         ...qatouchConfig,
         testRunKey,
-        testSuite
+        testSuite,
+        sprint
       };
       
       // Set baseUrl if provided
