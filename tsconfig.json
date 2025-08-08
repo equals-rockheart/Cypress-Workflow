@@ -13,10 +13,11 @@
       "@support/*": ["cypress/support/*"],
       "@constants/*": ["cypress/support/constants/*"]
     },
-    "types": ["cypress", "node"]
+    "types": ["cypress", "node", "./cypress/webpack-env.d.ts"]
   },
   "include": [
     "cypress.config.ts",
-    "cypress/**/*.ts"
+    "cypress/**/*.ts",
+    "cypress/webpack-env.d.ts"
   ]
 }
