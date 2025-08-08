@@ -1,12 +1,12 @@
 declare global {
   interface TestResult {
     case: string;
-    status: number;
+    status: QATouchStatus;
   }
 
   interface QATouchUpdateOptions {
     caseCode: string;
-    status: number;
+    status: QATouchStatus;
     comments?: string;
     projectKey?: string;
     testRunKey?: string;
@@ -17,6 +17,17 @@ declare global {
     comments?: string;
     projectKey?: string;
     testRunKey?: string;
+  }
+
+  enum QATouchStatus {
+    PASSED = 1 ,
+    UNTESTED,
+    BLOCKED,
+    RETEST,
+    FAILED,
+    NOT_APPLICABLE,
+    IN_PROGRESS,
+    HOLD
   }
 }
 
