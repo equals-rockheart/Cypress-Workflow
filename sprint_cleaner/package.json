@@ -1,0 +1,22 @@
+{
+  "name": "sprint-cleaner",
+  "version": "1.0.0",
+  "main": "index.ts",
+  "bin": {
+    "sprint-cleaner": "./index.ts"
+  },
+  "dependencies": {
+    "commander": "^10.0.0",
+    "inquirer": "^9.0.0"
+  },
+  "devDependencies": {
+    "@types/inquirer": "^9.0.0",
+    "@types/node": "^20.0.0",
+    "chalk": "^5.5.0",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.0.0"
+  },
+  "scripts": {
+    "clean": "ts-node index.ts --dir ../cypress/e2e/tests/Sprint/"
+  }
+}
