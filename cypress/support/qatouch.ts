@@ -142,7 +142,7 @@ Cypress.Commands.add('bulkUpdateQATouch', (options: { comments: string; projectK
     cy.log('No test results collected for current describe block, skipping bulk QATouch update');
     return;
   }
-  return;
+
   cy.updateQATouchTestRun({
     results: currentTestResults,
     comments: options.comments,

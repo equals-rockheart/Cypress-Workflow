@@ -37,7 +37,7 @@ export function loadSprintTests({
       return; // skip entire block if wrong side
     }
 
-    type SavedIt = { title: string; fn?: Mocha.Func; only?: boolean };
+    type SavedIt = { title: string; fn?: Mocha.Func; scope?: 'only' | 'skip' };
     const savedIts: SavedIt[] = [];
 
     const makeScopedIt = () => {
@@ -47,7 +47,7 @@ export function loadSprintTests({
 
             if (moduleNameInTitle === module.toLowerCase()) {
             const cleanedTitle = itTitle.replace(/\s*\[[^\]]+\]\s*/, ' ');
-            const entry: any = { title: cleanedTitle.trim(), fn: itFn };
+            const entry: SavedIt = { title: cleanedTitle.trim(), fn: itFn };
             if (scope) entry.scope = scope; // mark if only/skip was used
             savedIts.push(entry);
             }
@@ -65,8 +65,6 @@ export function loadSprintTests({
         return scoped;
     };
 
-
-
     const prevDescribe = (global as any).describe;
     const prevIt = (global as any).it;
     (global as any).describe = (nestedTitle: string, nestedFn: (this: Mocha.Suite) => void) => {
@@ -79,8 +77,11 @@ export function loadSprintTests({
     (global as any).describe = prevDescribe;
     (global as any).it = prevIt;
 
-    if (savedIts.length === 0) {
-      return; // skip if no matching tests
+    // Filter out tests with .only or .skip
+    const filteredTests = savedIts.filter(test => !test.scope);
+
+    if (filteredTests.length === 0) {
+      return; // skip if no matching tests after filtering
     }
 
     // Use the sprint title from the currently loading file
@@ -88,12 +89,8 @@ export function loadSprintTests({
     const displayTitle = currentFile && sprintTitles[currentFile] ? sprintTitles[currentFile] : title;
 
     return originalDescribe(displayTitle, () => {
-      savedIts.forEach((t) => {
-        if (t.only && (originalIt as any).only) {
-          (originalIt as any).only(t.title, t.fn);
-        } else {
-          originalIt(t.title, t.fn);
-        }
+      filteredTests.forEach((t) => {
+        originalIt(t.title, t.fn);
       });
     });
   };
