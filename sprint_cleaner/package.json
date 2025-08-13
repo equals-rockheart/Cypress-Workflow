@@ -17,6 +17,15 @@
     "ts-node": "^10.9.1"
   },
   "scripts": {
-    "clean": "ts-node index.ts --dir ../cypress/e2e/tests/Sprint/"
+    "clean": "ts-node index.ts"
+  },
+
+  "config": {
+    "enumPaths": {
+      "admin": "../cypress/support/modules/adminModules.ts",
+      "client": "../cypress/support/modules/clientModules.ts", 
+      "api": "../cypress/support/modules/apiModules.ts"
+    },
+    "sprintDir": "../cypress/e2e/tests/Sprint"
   }
 }
