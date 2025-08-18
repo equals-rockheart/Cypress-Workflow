@@ -134,28 +134,37 @@ Cypress.Commands.add('updateQATouchTestRun', (options: QATouchBulkUpdateOptions)
 //#region QA Touch Case Helper
 
 let currentTestResults: TestResult[] = [];
+let currentCommentedResults: { result: TestResult; comment: string }[] = [];
 let currentDescribeTitle: string = '';
 
 // Bulk update all collected test results for current describe block
 Cypress.Commands.add('bulkUpdateQATouch', (options: { comments: string; projectKey?: string; testRunKey?: string }) => {
-  if (currentTestResults.length === 0) {
-    cy.log('No test results collected for current describe block, skipping bulk QATouch update');
-    return;
+  const { comments, projectKey, testRunKey } = options;
+
+  if (currentCommentedResults.length > 0){
+    currentCommentedResults.forEach(({ result, comment }) => {
+      cy.updateQATouchTestCase({
+        caseCode: result.case,
+        status: result.status,
+        comments: comments + " | logs: " + comment,
+        projectKey,
+        testRunKey
+      });
+    });
+    currentCommentedResults = [];
   }
 
-  cy.updateQATouchTestRun({
-    results: currentTestResults,
-    comments: options.comments,
-    projectKey: options?.projectKey,
-    testRunKey: options?.testRunKey
-  });
-
-  // Clear results after update
-  currentTestResults = [];
-});
-
-beforeEach(() => {
-  (Cypress as any).currentQATouchStatus = undefined;
+  if (currentTestResults.length > 0) {
+    cy.updateQATouchTestRun({
+      results: currentTestResults,
+      comments,
+      projectKey,
+      testRunKey
+    });
+    currentTestResults = [];
+  } else {
+    cy.log('No bulk results collected for this describe block.');
+  }
 });
 
 afterEach(function () {
@@ -175,9 +184,7 @@ afterEach(function () {
   const caseNumber = extractCaseNumber(titlePath[1]); // e.g. "[C123] Some test"
   if (!caseNumber) return;
 
-  // Determine status:
-  // 1. Use custom override if set
-  // 2. Otherwise fall back to pass/fail
+  // Use custom override if set
   let status: QATouchStatus;
   if ((Cypress as any).currentQATouchStatus) {
     status = (Cypress as any).currentQATouchStatus;
@@ -189,10 +196,21 @@ afterEach(function () {
     status = QATouchStatus.UNTESTED;
   }
 
+  const comment: string | undefined = (Cypress as any).currentQATouchComment;
   const result: TestResult = { case: caseNumber, status: status};
-  currentTestResults.push(result);
 
-  console.log(`Collected test result: ${caseNumber} = ${status} (${this.currentTest.state})`);
+  if (comment) {
+    // push into comment bucket for individual updates
+    currentCommentedResults.push({ result, comment });
+  } else {
+    // push into bulk bucket
+    currentTestResults.push(result);
+  }
+
+  (Cypress as any).currentQATouchStatus = undefined;
+  (Cypress as any).currentQATouchComment = undefined;
+
+  console.log(`Collected test result: ${caseNumber} = ${QATouchStatus[status]} (${this.currentTest.state})`);
 });
 
 // Utility function to extract case number from test title
@@ -209,6 +227,12 @@ function extractCaseNumber(title: string): string | null {
 Cypress.Commands.add('setQATouchStatus', (status: QATouchStatus) => {
   (Cypress as any).currentQATouchStatus = status;
   cy.log(`Result: ${QATouchStatus[status]}`);
+});
+
+// Custom command to override comments inside tests
+Cypress.Commands.add('setQATouchComment', (comment: string) => {
+  (Cypress as any).currentQATouchComment = comment;
+  cy.log(`Comment: ${comment}`);
 });
 
 //#endregion

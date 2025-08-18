@@ -29,5 +29,10 @@ declare namespace Cypress {
      * Example: cy.setQATouchStatus(QATouchStatus.BLOCKED)
      */
     setQATouchStatus(status: QATouchStatus): Chainable<void>;
+
+    /**
+     * Attach a custom comment for the current test.
+     */
+    setQATouchComment(comment: string): Chainable<void>;
     }
 }
