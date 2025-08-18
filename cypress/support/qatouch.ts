@@ -154,6 +154,10 @@ Cypress.Commands.add('bulkUpdateQATouch', (options: { comments: string; projectK
   currentTestResults = [];
 });
 
+beforeEach(() => {
+  (Cypress as any).currentQATouchStatus = undefined;
+});
+
 afterEach(function () {
   const sprint = Cypress.env('sprint');
   if (!sprint) return; // Skip collection for local testing
@@ -171,15 +175,21 @@ afterEach(function () {
   const caseNumber = extractCaseNumber(titlePath[1]); // e.g. "[C123] Some test"
   if (!caseNumber) return;
 
-  let status = QATouchStatus.UNTESTED; // Default to skip
-  
-  if (this.currentTest.state === 'passed') {
+  // Determine status:
+  // 1. Use custom override if set
+  // 2. Otherwise fall back to pass/fail
+  let status: QATouchStatus;
+  if ((Cypress as any).currentQATouchStatus) {
+    status = (Cypress as any).currentQATouchStatus;
+  } else if (this.currentTest.state === 'passed') {
     status = QATouchStatus.PASSED;
   } else if (this.currentTest.state === 'failed') {
     status = QATouchStatus.FAILED;
+  } else {
+    status = QATouchStatus.UNTESTED;
   }
 
-  const result: TestResult = { case: caseNumber, status: status as QATouchStatus};
+  const result: TestResult = { case: caseNumber, status: status};
   currentTestResults.push(result);
 
   console.log(`Collected test result: ${caseNumber} = ${status} (${this.currentTest.state})`);
@@ -194,5 +204,11 @@ function extractCaseNumber(title: string): string | null {
   }
   return null;
 }
+
+// Custom command to override status inside tests
+Cypress.Commands.add('setQATouchStatus', (status: QATouchStatus) => {
+  (Cypress as any).currentQATouchStatus = status;
+  cy.log(`Result: ${QATouchStatus[status]}`);
+});
 
 //#endregion

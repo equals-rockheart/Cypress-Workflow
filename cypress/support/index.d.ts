@@ -24,5 +24,10 @@ declare namespace Cypress {
      */
     bulkUpdateQATouch(options: { comments: string; projectKey?: string; testRunKey?: string }): Chainable<void>;
 
+    /**
+     * Override the QATouch status for the current test.
+     * Example: cy.setQATouchStatus(QATouchStatus.BLOCKED)
+     */
+    setQATouchStatus(status: QATouchStatus): Chainable<void>;
     }
 }
