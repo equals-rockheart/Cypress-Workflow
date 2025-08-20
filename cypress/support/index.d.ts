@@ -34,5 +34,10 @@ declare namespace Cypress {
      * Attach a custom comment for the current test.
      */
     setQATouchComment(comment: string): Chainable<void>;
+
+    /**
+     * Update Google Sheets Cell
+     */
+    updateSheetStatus(test: Mocha.Test, status: string): void;
     }
 }

@@ -4,3 +4,5 @@ node_modules
 cypress/videos
 cypress/screenshots
 js/*.js
+
+/secrets/*

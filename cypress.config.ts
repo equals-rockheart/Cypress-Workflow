@@ -1,4 +1,5 @@
 import { defineConfig } from 'cypress';
+import { google } from "googleapis";
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -26,6 +27,10 @@ export default defineConfig({
 
       // Handle sprint validation
       const sprint: string  = config.env.sprint || '';
+
+      //Handle sheets validation
+      const regressionSheetConfig = getConfigurationByFile("regression-sheet");
+      const regression: boolean = config.env.regression === true || config.env.regression === "true";
       
       // If testRunKey is provided but testSuite is not, throw error
       if (testRunKey && !testSuite) {
@@ -57,15 +62,22 @@ export default defineConfig({
         ...config.env,
         ...environmentConfig,
         ...qatouchConfig,
+        ...regressionSheetConfig,
         testRunKey,
         testSuite,
-        sprint
+        sprint,
+        regression,
       };
       
       // Set baseUrl if provided
       if (environmentConfig.baseUrl) {
         config.baseUrl = environmentConfig.baseUrl;
       }
+
+      // Google API
+      on("task", {
+        updateGoogleSheet,
+      });
       
       return config;
     },
@@ -87,4 +99,32 @@ function getConfigurationByFile(file: string): Record<string, any> {
     console.error(`Error parsing config file ${pathToConfigFile}:`, error);
     return {};
   }
+}
+
+async function updateGoogleSheet({
+  spreadsheetId,
+  sheetName,
+  cellRef,
+  value,
+}: {
+  spreadsheetId: string;
+  sheetName: string;
+  cellRef: string;
+  value: string;
+}): Promise<number> {
+  const auth = new google.auth.GoogleAuth({
+    keyFile: path.resolve(process.cwd(), "secrets/service-account.json"),
+    scopes: ["https://www.googleapis.com/auth/spreadsheets"],
+  });
+
+  const sheets = google.sheets({ version: "v4", auth });
+
+  const res = await sheets.spreadsheets.values.update({
+    spreadsheetId,
+    range: `${sheetName}!${cellRef}`,
+    valueInputOption: "USER_ENTERED",
+    requestBody: { values: [[value]] },
+  });
+
+  return res.status; // 200 means success
 }
