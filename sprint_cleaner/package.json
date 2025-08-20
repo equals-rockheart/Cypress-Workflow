@@ -26,6 +26,6 @@
       "client": "../cypress/support/modules/clientModules.ts", 
       "api": "../cypress/support/modules/apiModules.ts"
     },
-    "sprintDir": "../cypress/e2e/tests/Sprint"
+    "sprintDir": "../cypress/e2e/sprint"
   }
 }

@@ -42,18 +42,16 @@ export default defineConfig({
         throw new Error('Invalid testSuite value. Use one of: admin | client | api');
       }
       
-      // Set spec pattern based on testSuite (capitalize first letter)
       if (testSuite) {
-        const capitalizedTestSuite = testSuite.charAt(0).toUpperCase() + testSuite.slice(1).toLowerCase();
-        config.specPattern = [`cypress/e2e/tests/${capitalizedTestSuite}/**/*.cy.{js,jsx,ts,tsx}`,'cypress/e2e/tests/*.cy.ts'];
+        config.specPattern = [`cypress/e2e/${testSuite}/**/*.cy.{js,jsx,ts,tsx}`,'cypress/e2e/*.cy.ts'];
       }
 
       // No sprint provided — leave specPattern unchanged
       if (sprint) {
         if (sprint === 'all') {
-          config.specPattern = 'cypress/e2e/tests/Sprint/*.cy.{js,jsx,ts,tsx}';
+          config.specPattern = 'cypress/e2e/sprint/*.cy.{js,jsx,ts,tsx}';
         } else {
-          config.specPattern = `cypress/e2e/tests/Sprint/${sprint}.cy.{js,jsx,ts,tsx}`;
+          config.specPattern = `cypress/e2e/sprint/${sprint}.cy.{js,jsx,ts,tsx}`;
         }
       }
       

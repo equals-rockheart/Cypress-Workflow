@@ -1,6 +1,6 @@
  /// <reference types="cypress" />
 
-import { loginPage } from "../e2e/pages/LoginPage";
+import { loginPage } from "@pages/Login";
 
 Cypress.Commands.add('login', (email: string, password: string) => {
   cy.session([email, password], () => {

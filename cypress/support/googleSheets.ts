@@ -38,9 +38,9 @@ Cypress.Commands.add("updateSheetStatus", (test, status) => {
         // Determine sheet tab name from spec path
         const specPath: string = Cypress.spec.relative || "";
         sheetName = "Sheet1"; // fallback
-        if (specPath.includes("Admin")) {
+        if (specPath.includes("admin")) {
             sheetName = "Admin";
-        } else if (specPath.includes("Client")) {
+        } else if (specPath.includes("client")) {
             sheetName = "Merchant";
         }
     }
