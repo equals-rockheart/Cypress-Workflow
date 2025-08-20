@@ -2,11 +2,11 @@ export function loadSprintTests({
   side,
   module,
 }: {
-  side: "Client" | "Admin" | "Api";
+  side: string;
   module: string;
 }) {
   const sprintContext = require.context(
-    "../e2e/tests/Sprint",
+    "../e2e/sprint",
     false,
     /\.cy\.ts$/
   );
@@ -22,19 +22,16 @@ export function loadSprintTests({
     sprintTitles[file] = title; // e.g. "v25"
   });
 
-  // Custom describe to filter and rename sides
+  // Custom describe to filter by side
   (global as any).describe = (title: string, fn: (this: Mocha.Suite) => void) => {
-    const sideMatch = title.match(/^(Client|Admin|Api)\s+Side$/i);
-
-    if (!sideMatch) {
-      return originalDescribe(title, fn);
-    }
-
-    const sideInFile = sideMatch[1].toLowerCase();
-    const requestedSide = side.toLowerCase();
-
-    if (sideInFile !== requestedSide) {
-      return; // skip entire block if wrong side
+    // Check if this describe block matches the requested side
+    // More flexible matching - check if the side string appears in the title
+    const titleLower = title.toLowerCase();
+    const sideLower = side.toLowerCase();
+    
+    // If side is provided and title doesn't contain the side string, skip this block
+    if (side && !titleLower.includes(sideLower)) {
+      return; // skip entire block if side doesn't match
     }
 
     type SavedIt = { title: string; fn?: Mocha.Func; scope?: 'only' | 'skip' };
@@ -46,10 +43,10 @@ export function loadSprintTests({
             const moduleNameInTitle = match ? match[1].trim().toLowerCase() : null;
 
             if (moduleNameInTitle === module.toLowerCase()) {
-            const cleanedTitle = itTitle.replace(/\s*\[[^\]]+\]\s*/, ' ');
-            const entry: SavedIt = { title: cleanedTitle.trim(), fn: itFn };
-            if (scope) entry.scope = scope; // mark if only/skip was used
-            savedIts.push(entry);
+                const cleanedTitle = itTitle.replace(/\s*\[[^\]]+\]\s*/, ' ');
+                const entry: SavedIt = { title: cleanedTitle.trim(), fn: itFn };
+                if (scope) entry.scope = scope; // mark if only/skip was used
+                savedIts.push(entry);
             }
         };
 
