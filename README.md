@@ -2,11 +2,22 @@
 
 A comprehensive guide for setting up and running Cypress tests with QATouch integration for TypeScript projects.
 
+> ⚠️ **Note**  
+> This repository assumes you are using **TypeScript**.  
+> While a migration guide for **JavaScript** is available, TypeScript is the default because:  
+> - **Stronger typing** → reduces runtime errors by catching mistakes at compile time.  
+> - **Better tooling** → editors like VS Code provide autocomplete and intellisense.  
+> - **Maintainability** → large test suites stay more organized.  
+> - **Consistency** → aligns with modern Cypress practices.  
+>
+> If your project uses **JavaScript**, refer to the migration guide.
+
 ---
 
 ## 📋 Table of Contents
 - [Quick Start](#-quick-start)
 - [Configuration](#%EF%B8%8F-configuration) 
+- [Test Suite Architecture](#-test-suite-architecture)
 - [Running Tests](#-running-tests)
 - [Sprint Development](#-sprint-development)
 - [QATouch Integration](#-qatouch-integration)
@@ -21,7 +32,8 @@ A comprehensive guide for setting up and running Cypress tests with QATouch inte
 ### Prerequisites
 - Node.js installed
 - Access to the project repository
-- QATouch account (for regression testing)
+- QATouch account (for sprint/regression test runs)
+- Google Service Account (for projects with Google Sheets integration)
 
 ### Installation
 ```bash
@@ -37,31 +49,113 @@ npm install
 ## ⚙️ Configuration
 
 ### 1. Environment Setup
-Update configuration files in `/cypress/config/env/`:
-- `develop.json` - Development environment
-- `staging.json` - Staging environment  
+Update configuration files in `/cypress/config/env/` based on your project's available environments:
+
+**Common configurations:**
+- `staging.json` - Staging environment
 - `live.json` - Production environment
 
-### 2. QATouch Integration
-Edit `/cypress/qatouch.json` with your API credentials:
+**Additional configurations (if available):**
+- `develop.json` - Development environment
+- `uat.json` - User Acceptance Testing environment
+
+**Required Config Values:**
 ```json
 {
-  "apiToken": "your-qatouch-api-token",
-  "projectId": "your-project-id"
+   "env" : "develop",
+   "baseURL" : "https://develop.paystage.net"
 }
 ```
 
-### 3. Environment Variables
-Ensure all paths and variables match your specific setup requirements.
+> 💡 **Note**: Not all projects will have all environments. Configure only what your project provides.
+
+### 2. QATouch Integration
+Edit `/cypress/qatouch.json` with your API credentials and project setup:
+```json
+{
+  "apiToken": "your-qatouch-api-token",
+  "domain": "rhgc",
+  "projectKey-admin": "your-admin-project-key",
+  "projectKey-client": "your-client-project-key",
+  "projectKey-api": "your-api-project-key"
+}
+```
+> 💡 **Project-Dependent**: Configure only the keys that match your project's test suites. Not all projects require all three keys.
+
+### 3. Google Sheets Integration (Optional)
+For projects using Google Sheets regression tracking:
+
+**Configuration** (`/cypress/regression-sheet.json`):
+```json
+{
+   "regression-sheet" : "google-spreadsheet-link",
+   "regression-test-pass" : "✅",
+   "regression-test-fail" : "❌"
+}
+```
+
+**API Setup**:
+1. Create Google Cloud Project and enable Google Sheets API
+2. Create Service Account and generate JSON key
+3. Place key file at `/secrets/service-account.json` (exact filename required)
+4. Grant service account editor access to your Google Sheets
+
+> ⚠️ **Security**: Add `/secrets/` to `.gitignore` - never commit credentials.
+
+---
+
+## 🏗️ Test Suite Architecture
+
+### How It Works
+The framework uses synchronized components that automatically resolve based on the `testSuite` parameter:
+
+```bash
+# When you run:
+npx cypress run --env testSuite=admin
+
+# Framework automatically resolves:
+projectKey-admin     → QATouch integration
+e2e/admin/           → Test file location  
+pages/admin/         → Page objects
+```
+
+### Required Structure
+> ⚠️ **Critical**: Keep these components synchronized for each test suite:
+
+| Test Suite | QATouch Config | Test Directory | Page Objects |
+|------------|----------------|----------------|--------------|
+| `admin` | `projectKey-admin` | `e2e/admin/` | `pages/admin/` |
+| `client` | `projectKey-client` | `e2e/client/` | `pages/client/` |
+| `api` | `projectKey-api` | `e2e/api/` | `pages/api/` |
+
+### Directory Structure
+```
+cypress/
+├── e2e/
+│   ├── admin/          # Admin test files
+│   ├── client/         # Client test files  
+│   ├── api/            # API test files
+│   └── sprint/         # Sprint test files
+├── pages/
+│   ├── admin/          # Admin page objects
+│   ├── client/         # Client page objects
+│   └── api/            # API utilities
+└── config/
+    └── env/            # Environment configurations
+```
+
+### Adding New Test Suites
+1. Add `projectKey-{name}` to `qatouch.json`
+2. Create `e2e/{name}/` and `pages/{name}/` directories
+3. Use `testSuite={name}` in run commands
+
+> 📝 **Note**: The `projectKey-{testSuite}` naming convention is hardcoded in the framework.
 
 ---
 
 ## 🚀 Running Tests
 
 ### Interactive Mode (GUI)
-Use `open` for the Cypress Test Runner interface:
-
-#### Local Development
 ```bash
 # Development environment
 npx cypress open --env configFile=develop
@@ -74,11 +168,14 @@ npx cypress open --env configFile=live
 ```
 
 ### Headless Mode
-Use `run` for CI/CD or automated execution:
 
 #### Regression Testing
 ```bash
-npx cypress run --env configFile=live,testRunKey=<qatouch-key>,testSuite=admin
+# Google Sheets regression
+npx cypress run --env configFile=develop,regression=true
+
+# QATouch regression
+npx cypress run --env configFile=live,testRunKey=<qatouch-testRunkey>,testSuite=<testSuite>
 ```
 
 #### Sprint Testing
@@ -86,7 +183,7 @@ npx cypress run --env configFile=live,testRunKey=<qatouch-key>,testSuite=admin
 # All sprint tests
 npx cypress run --env configFile=develop,sprint=all
 
-# Specific sprint
+# Specific sprint version
 npx cypress run --env configFile=develop,sprint=v25
 ```
 
@@ -94,117 +191,81 @@ npx cypress run --env configFile=develop,sprint=v25
 
 ## 🏃‍♂️ Sprint Development
 
-### Sprint File Structure
-Base your sprint tests on `/cypress/e2e/Sprint/base.cy.ts`.
+### File Naming & Structure
+- **Naming**: Sprint 25 → `v25.cy.ts`, Sprint 26 → `v26.cy.ts`
+- **Base Template**: Use `/cypress/e2e/sprint/base.cy.ts` as starting point
+- **Organization**: Mirror your QATouch project structure in `describe` blocks
 
-#### Required Structure
-Each sprint file **must** contain exactly these three describe blocks:
-
+**Example Structure** (PayStage project):
 ```typescript
-describe("Admin Side", () => {
+describe("Admin", () => {
   // Admin-related test cases
 });
 
-describe("Client Side", () => {
-  // Client-facing test cases  
+describe("Client", () => {
+   // Client-facing test cases  
 });
 
-describe("API Side", () => {
-  // API endpoint tests
+describe("API", () => {
+   // API endpoint tests
 });
 ```
-
-> ⚠️ **Critical**: Do not rename these describe blocks - system components depend on these exact names.
 
 ### Test Case Format
+**Naming Convention**: `CaseNumber - [Module Name] Test Case Title`
 
-#### Naming Convention
-```
-CaseNumber - [Module Name] Test Case Title
-```
-
-#### Rules
-- **Case Number**: Numeric only (e.g., `TR0034` → `34`)
-- **Module Name**: Use predefined enums (e.g., `${ClientModules.Dashboard}`)
+**Rules**:
+- **Case Number**: Numeric only (`TR0034` → `34`)
+- **Module Name**: Use predefined enums (`${ClientModules.Dashboard}`)
 - **Title**: Descriptive and specific
 
-#### Example Implementation
+**Example**:
 ```typescript
 it(`382 - [${ClientModules.Dashboard}] Select GCash Solution Deposit Card`, () => {
-  // Test implementation here
-  cy.visit('/dashboard');
-  cy.get('[data-testid="gcash-deposit"]').click();
-  cy.url().should('include', '/deposit/gcash');
+  // Test implementation
 });
 ```
 
 ### Development Workflow
-
-#### 1. Create Test Structure First
-```typescript
-// Create all it blocks with empty bodies initially
-it(`123 - [${AdminModules.UserManagement}] Create New User`, () => {
-  // TODO: Implement test logic
-});
-
-it(`124 - [${AdminModules.UserManagement}] Edit User Details`, () => {
-  // TODO: Implement test logic  
-});
-```
-
-#### 2. Run Sprint Cleaner
-Before implementing test logic, run the Sprint Cleaner to detect duplicate case numbers.
-
-#### 3. Implement Test Logic
-Fill in the test implementations after ensuring no duplicates exist.
-
-### QATouch Test Run Setup
-
-#### Finding Your Test Run Key
-1. **From URL**: Copy the key from the QATouch URL
-   ```
-   https://rhgc.qatouch.com/v2#/testrun/p/1p8b/tid/JG3KB
-                                                    ^^^^^
-   Test Run Key: JG3KB
-   ```
-
-2. **From Config**: Click **Config** in QATouch interface
-   ```json
-   {
-     "testRunId": "JG3KB"
-   }
-   ```
+1. **Create Structure**: Start with empty `it` blocks for all test cases
+2. **Run Sprint Cleaner**: Detect and resolve duplicate case numbers
+3. **Implement Logic**: Fill in test implementations after cleaner passes
 
 ---
 
 ## 🔗 QATouch Integration
 
-### Custom Test Status
-Override default pass/fail status:
-```typescript
-import { QATouchStatus } from '../support/constants/qatouchStatus';
+### Test Run Setup
+Link each `describe` block to a QATouch test run:
 
-it('Test case that needs custom status', () => {
-  // Test logic here
-  cy.setQATouchStatus(QATouchStatus.BLOCKED);
+```typescript
+describe("Admin", () => {
+   const ADMIN_testRunKey = "JG3KB"; // Get from QATouch URL or Config
+
+   after(() => {
+      cy.bulkUpdateQATouch({
+         comments: `Cypress Automation - env: ${Cypress.env("env")}`,
+         projectKey: Cypress.env("projectKey-admin"),
+         testRunKey: ADMIN_testRunKey
+      });
+   });
 });
 ```
 
-### Custom Comments
-Add context to test results:
+### Finding Test Run Keys
+- **From URL**: `https://rhgc.qatouch.com/v2#/testrun/p/1p8b/tid/JG3KB` → Key: `JG3KB`
+- **From Config**: Click **Config** in QATouch interface
+
+### Custom Status & Comments
 ```typescript
-it('Test case with additional context', () => {
-  // Test logic here
-  cy.setQATouchComment('Database connection timeout - needs investigation');
-});
+// Add custom comment
+cy.setQATouchComment('Database timeout - needs investigation');
+
+// Override test status
+cy.setQATouchStatus(QATouchStatus.BLOCKED);
 ```
 
-### Available Status Options
-- `PASSED`
-- `FAILED` 
-- `BLOCKED`
-- `NOT_EXECUTED`
-- `RETEST`
+**Available Status Options**: `PASSED`, `FAILED`, `BLOCKED`, `RETEST`, `UNTESTED`, `NOT_APPLICABLE`, `IN_PROGRESS`, `HOLD`
 
 ---
 
@@ -213,17 +274,21 @@ it('Test case with additional context', () => {
 ### Purpose
 Detects and handles duplicate test case numbers across sprint files.
 
-### Setup
+### Setup & Usage
 ```bash
-# Navigate to sprint cleaner directory
+# Navigate and install
 cd /sprint_cleaner/
-
-# Install dependencies
 npm install
+
+# Run cleaner
+npm run clean
+
+# With custom directory
+npx ts-node index.ts --dir "custom-sprint-directory"
 ```
 
 ### Configuration
-Update `package.json` if paths have changed:
+Update paths in `package.json` if needed:
 ```json
 {
   "config": {
@@ -232,45 +297,36 @@ Update `package.json` if paths have changed:
       "client": "../cypress/support/constants/clientModules.ts", 
       "api": "../cypress/support/constants/apiModules.ts"
     },
-    "sprintDir": "../cypress/e2e/tests/Sprint"
+    "sprintDir": "../cypress/e2e/sprint"
   }
 }
 ```
 
-### Usage
-```bash
-# Using npm script (recommended)
-npm run clean
-
-# With custom directory
-npx ts-node index.ts --dir "custom-sprint-directory"
-```
-
-### Duplicate Handling Options
-- **delete**: Removes duplicate test cases entirely
-- **skip**: Adds `.skip` to duplicate test blocks 
-- **leave**: No changes made (report only)
+### Handling Options
+- **delete**: Remove duplicate test cases
+- **skip**: Add `.skip` to duplicate blocks
+- **leave**: Report only, no changes
 
 ---
 
 ## 💡 Best Practices
 
-### Development
+### Development Workflow
 - ✅ Create empty `it` blocks first, then run Sprint Cleaner
-- ✅ Use development config during test creation (no `sprint` env var)
+- ✅ Use development config during test creation
 - ✅ Test manually before automation
-- ❌ Don't create automation before sprint deployment
+- ✅ Ensure sprint deployment is complete before automation
 
 ### Test Organization
-- Group related tests within appropriate side (Admin/Client/API)
-- Use descriptive test titles
-- Keep test cases atomic and independent
+- Group tests by appropriate side (Admin/Client/API)
+- Use descriptive test titles and keep cases atomic
 - Follow consistent naming patterns
+- Maintain synchronization between QATouch keys and directory structure
 
-### QATouch Integration  
+### Security & Integration
+- Keep API tokens environment-specific and secure
 - Set up test runs manually before automation
-- Use custom status and comments for better reporting
-- Keep API tokens secure and environment-specific
+- Use custom status and comments for better QATouch reporting
 
 ---
 
@@ -278,37 +334,25 @@ npx ts-node index.ts --dir "custom-sprint-directory"
 
 ### Common Issues
 
-#### Tests Not Running
+**Tests Not Running**:
 ```bash
-# Check if dependencies are installed
-npm install
-
-# Verify config file exists
-ls cypress/config/env/
+npm install                    # Reinstall dependencies
+ls cypress/config/env/        # Verify config files exist
 ```
 
-#### QATouch Integration Failures
+**QATouch Integration Failures**:
 - Verify API token in `qatouch.json`
 - Ensure test run exists and is accessible
 - Check network connectivity to QATouch API
 
-#### Duplicate Case Number Errors
+**Duplicate Case Numbers**:
 ```bash
-# Run Sprint Cleaner to identify and fix duplicates
 cd sprint_cleaner && npm run clean
 ```
 
-### Environment-Specific Issues
-
-#### Development Environment
-```bash
-npx cypress open --env configFile=develop
-```
-
-#### Missing Module Enums
+**Missing Module Enums**:
 - Check enum file paths in Sprint Cleaner config
-- Verify enum exports are correct
-- Update import statements if needed
+- Verify enum exports and import statements
 
 ---
 
@@ -316,7 +360,7 @@ npx cypress open --env configFile=develop
 
 - [Cypress Documentation](https://docs.cypress.io/)
 - [QATouch API Documentation](https://doc.qatouch.com/#section/QA-Touch-API)
-- [TypeScript Best Practices](https://typescript-eslint.io/docs/)
+- [TypeScript Best Practices](https://www.typescriptlang.org/docs/handbook/declaration-files/do-s-and-don-ts.html)
 
 ---
 
