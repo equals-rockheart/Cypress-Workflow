@@ -1,3 +1,5 @@
+let describeBlockResults = new Map();
+
 Cypress.Commands.add("updateSheetStatus", (test, status) => {
     const sheetUrl: string | undefined = Cypress.env("regression-sheet");
     if (!sheetUrl) {
@@ -56,11 +58,77 @@ Cypress.Commands.add("updateSheetStatus", (test, status) => {
     });
 });
 
+// Helper function to check if a title has cell reference
+function hasCellReference(title: string): boolean {
+    return /\{([^}]+)\}/.test(title);
+}
+
+// Helper function to get describe block key
+function getDescribeBlockKey(test: any): string {
+    // Create a unique key for the describe block based on parent titles
+    const parentTitles = [];
+    let current = test.parent;
+    while (current && current.title) {
+        parentTitles.unshift(current.title);
+        current = current.parent;
+    }
+    return parentTitles.join(' > ');
+}
+
+// Track test results for describe blocks
 afterEach(function () {
     if (!Cypress.env("regression")) return;
 
     const test = this.currentTest;
     if (!test) return;
 
-    cy.updateSheetStatus(test, test.state || "failed");
+    const testStatus = test.state || "failed";
+
+    // Check if current test (it block) has cell reference
+    if (hasCellReference(test.title)) {
+        // Update sheet for individual it block
+        cy.updateSheetStatus(test, testStatus);
+    }
+
+    // Track results for describe blocks
+    let current = test.parent;
+    while (current && current.title) {
+        if (hasCellReference(current.title)) {
+            const describeKey = getDescribeBlockKey(test);
+
+            if (!describeBlockResults.has(describeKey)) {
+                describeBlockResults.set(describeKey, {
+                    describe: current,
+                    tests: [],
+                    allPassed: true
+                });
+            }
+
+            const describeResult = describeBlockResults.get(describeKey);
+            describeResult.tests.push({
+                title: test.title,
+                status: testStatus
+            });
+
+            // If any test fails, mark the entire describe as failed
+            if (testStatus !== "passed") {
+                describeResult.allPassed = false;
+            }
+        }
+        current = current.parent;
+    }
+});
+
+// Update describe block status after all tests complete
+after(function () {
+    if (!Cypress.env("regression")) return;
+
+    // Process all tracked describe blocks
+    describeBlockResults.forEach((result, key) => {
+        const finalStatus = result.allPassed ? "passed" : "failed";
+        cy.updateSheetStatus(result.describe, finalStatus);
+    });
+
+    // Clear the results for next spec file
+    describeBlockResults.clear();
 });
