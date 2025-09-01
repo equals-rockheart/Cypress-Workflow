@@ -1,5 +1,5 @@
 import { defineConfig } from 'cypress';
-import baseConfig from './base.config';
+import baseConfig from './cypress-base/base.config';
 
 export default defineConfig({
   e2e: {

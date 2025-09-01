@@ -31,4 +31,4 @@ declare global {
   }
 }
 
-export {}; // Makes it a module to avoid conflicts
+export {};

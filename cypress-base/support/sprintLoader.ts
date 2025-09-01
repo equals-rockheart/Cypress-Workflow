@@ -6,7 +6,7 @@ export function loadSprintTests({
   module: string;
 }) {
   const sprintContext = require.context(
-    "../e2e/sprint",
+    "../../cypress/e2e/sprint",
     false,
     /\.cy\.ts$/
   );
@@ -16,7 +16,7 @@ export function loadSprintTests({
 
   // Map sprint file -> sprint title (file name without extension)
   const sprintTitles: Record<string, string> = {};
-  sprintContext.keys().forEach((file) => {
+  sprintContext.keys().forEach((file : string) => {
     const baseName = file.replace(/^.*[\\/]/, ""); // strip folder path
     const title = baseName.replace(/\.cy\.ts$/i, ""); // remove extension
     sprintTitles[file] = title; // e.g. "v25"
@@ -93,7 +93,7 @@ export function loadSprintTests({
   };
 
   // Load each sprint file individually so it gets its own title
-  sprintContext.keys().forEach((file) => {
+  sprintContext.keys().forEach((file : string) => {
     (global as any).__CURRENT_SPRINT_FILE__ = file;
     sprintContext(file);
     delete (global as any).__CURRENT_SPRINT_FILE__;

@@ -1,6 +1,6 @@
 let describeBlockResults = new Map();
 
-Cypress.Commands.add("updateSheetStatus", (test, status) => {
+Cypress.Commands.add("updateSheetStatus", (test: Mocha.Test, status: string) => {
     const sheetUrl: string | undefined = Cypress.env("regression-sheet");
     if (!sheetUrl) {
         //cy.log("⚠️ No sheet URL provided");
