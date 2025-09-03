@@ -1,23 +1,25 @@
 {
   "compilerOptions": {
     "target": "ES2020",
-    "module": "CommonJS",
-    "moduleResolution": "Node",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
     "lib": ["ES2020", "DOM"],
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
-    "baseUrl": "./",
-    "paths": {
-      "@pages/*": ["cypress/pages/*"],
-      "@support/*": ["cypress/support/*"],
-      "@constants/*": ["cypress/support/constants/*"]
-    },
-    "types": ["cypress", "node", "./cypress/webpack-env.d.ts"]
+    "strictBindCallApply": true,
+    "strictFunctionTypes": true,
+    "strictPropertyInitialization": false,
+    "noImplicitAny": true,
+    "noImplicitThis": true,
+    "alwaysStrict": true,
+    "strictNullChecks": false,
+    "allowJs": true,
+    "checkJs": false,
+    "noEmit": true
   },
   "include": [
-    "cypress.config.ts",
-    "cypress/**/*.ts",
-    "cypress/webpack-env.d.ts"
+    "**/*.ts",
+    "**/*.d.ts"
   ]
 }

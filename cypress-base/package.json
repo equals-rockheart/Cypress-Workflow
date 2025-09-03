@@ -1,0 +1,15 @@
+{
+  "name": "cypress-base",
+  "version": "1.0.0",
+  "private": true,
+  "peerDependencies": {
+    "cypress": ">=14 <15"
+  },
+  "dependencies": {
+    "glob": "^11.0.3",
+    "googleapis": "^156.0.0"
+  },
+  "devDependencies": {
+    "ts-node": "^10.9.2"
+  }
+}

@@ -48,7 +48,7 @@ Cypress.Commands.add("updateSheetStatus", (test: Mocha.Test, status: string) => 
     }
 
     // mapping
-    const value = status === "passed" ? Cypress.env("regression-test-pass") : Cypress.env("regression-test-fail");
+    const value : string = status === "passed" ? Cypress.env("regression-test-pass") : Cypress.env("regression-test-fail");
 
     cy.task("updateGoogleSheet", {
         spreadsheetId,
@@ -64,7 +64,7 @@ function hasCellReference(title: string): boolean {
 }
 
 // Helper function to get describe block key
-function getDescribeBlockKey(test: any): string {
+function getDescribeBlockKey(test: Mocha.Test): string {
     // Create a unique key for the describe block based on parent titles
     const parentTitles = [];
     let current = test.parent;
@@ -79,7 +79,7 @@ function getDescribeBlockKey(test: any): string {
 afterEach(function () {
     if (!Cypress.env("regression")) return;
 
-    const test = this.currentTest;
+    const test : Mocha.Test = this.currentTest;
     if (!test) return;
 
     const testStatus = test.state || "failed";
@@ -91,7 +91,7 @@ afterEach(function () {
     }
 
     // Track results for describe blocks
-    let current = test.parent;
+    let current : Mocha.Suite = test.parent;
     while (current && current.title) {
         if (hasCellReference(current.title)) {
             const describeKey = getDescribeBlockKey(test);

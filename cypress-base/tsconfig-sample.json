@@ -1,0 +1,19 @@
+{
+  "extends": "./cypress-base/base.tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": "./",
+    "paths": {
+      "@integrations/*": ["cypress-base/support/*"],
+      "@pages/*": ["cypress/pages/*"],
+      "@support/*": ["cypress/support/*"],
+      "@modules/*": ["cypress/support/modules/*"]
+    },
+    "types": ["cypress", "node"]
+  },
+  "include": [
+    "cypress.config.ts",
+    "cypress/**/*.ts",
+    "cypress-base/**/*.ts",
+    "cypress-base/**/*.d.ts"
+  ]
+} // rename to tsconfig.json
