@@ -8,7 +8,7 @@ Cypress.Commands.add("updateSheetStatus", (test: Mocha.Test, status: string) => 
     }
 
     // Extract spreadsheetId from URL
-    const match: RegExpMatchArray = sheetUrl.match(/\/d\/([a-zA-Z0-9-_]+)/);
+    const match: RegExpMatchArray | null = sheetUrl.match(/\/d\/([a-zA-Z0-9-_]+)/);
     if (!match) {
         cy.log("⚠️ Invalid Google Sheet link");
         return;
@@ -17,7 +17,7 @@ Cypress.Commands.add("updateSheetStatus", (test: Mocha.Test, status: string) => 
 
     // Extract cell reference {C3} or {Sheet!C3} from test title
     const title: string = test.title || "";
-    const cellMatch: RegExpMatchArray = title.match(/\{([^}]+)\}/);
+    const cellMatch: RegExpMatchArray | null = title.match(/\{([^}]+)\}/);
 
     if (!cellMatch) {
         cy.log("⚠️ No cell reference in test title");
@@ -79,7 +79,7 @@ function getDescribeBlockKey(test: Mocha.Test): string {
 afterEach(function () {
     if (!Cypress.env("regression")) return;
 
-    const test : Mocha.Test = this.currentTest;
+    const test : Mocha.Test | undefined = this.currentTest;
     if (!test) return;
 
     const testStatus = test.state || "failed";
@@ -91,7 +91,7 @@ afterEach(function () {
     }
 
     // Track results for describe blocks
-    let current : Mocha.Suite = test.parent;
+    let current : Mocha.Suite | undefined = test.parent;
     while (current && current.title) {
         if (hasCellReference(current.title)) {
             const describeKey = getDescribeBlockKey(test);

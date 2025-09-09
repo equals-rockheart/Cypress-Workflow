@@ -1,9 +1,9 @@
 {
-  "extends": "./cypress-base/base.tsconfig.json",
+  "extends": "./cypress-base/base/base.tsconfig.json",
   "compilerOptions": {
     "baseUrl": "./",
     "paths": {
-      "@integrations/*": ["cypress-base/support/*"],
+      "@integrations/*": ["cypress-base/integrations/*"],
       "@pages/*": ["cypress/pages/*"],
       "@support/*": ["cypress/support/*"],
       "@modules/*": ["cypress/support/modules/*"]
