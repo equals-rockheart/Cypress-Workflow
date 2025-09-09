@@ -32,7 +32,7 @@ declare namespace Cypress {
     /**
      * Update Google Sheets Cell
      */
-    updateSheetStatus(test: Mocha.Test, status: string): Cypress.Chainable<void>;
+    updateSheetStatus(test: Mocha.Test, status: string, sheet?: string): Cypress.Chainable<void>;
     
     }
 }

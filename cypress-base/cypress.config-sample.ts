@@ -1,5 +1,5 @@
 import { defineConfig } from 'cypress';
-import baseConfig from './cypress-base/base.config';
+import baseConfig from './cypress-base/base/base.config';
 
 export default defineConfig({
   e2e: {
@@ -15,4 +15,4 @@ export default defineConfig({
       return config;
     },
   },
-});
+}); // rename to cypress.config.ts

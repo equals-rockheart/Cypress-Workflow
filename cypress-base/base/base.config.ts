@@ -12,7 +12,7 @@ export default defineConfig({
       const configFile: string = config.env.baseConfig || config.env.configFile || 'staging';
       const environmentConfig = getConfigurationByFile(`env/${configFile}`);
       const qatouchConfig = getConfigurationByFile("qatouch");
-      
+
       // Handle testRunKey and testSuite validation
       const testRunKey: string = config.env.testRunKey || '';
       const testSuite: string = config.env.testSuite || '';
@@ -23,12 +23,12 @@ export default defineConfig({
       // Handle sheets validation
       const regressionSheetConfig = getConfigurationByFile("regression-sheet");
       const regression: boolean = config.env.regression === true || config.env.regression === "true";
-      
+
       // If testRunKey is provided but testSuite is not, throw error
       if (testRunKey && !testSuite) {
         throw new Error('testSuite is required when testRunKey is provided (e.g., testSuite=admin)');
       }
-      
+
       // Set spec patterns based on testSuite
       if (testSuite) {
         config.specPattern = [
@@ -44,7 +44,7 @@ export default defineConfig({
           config.specPattern = `cypress/e2e/sprint/${sprint}.cy.{js,jsx,ts,tsx}`;
         }
       }
-      
+
       // Merge environment variables
       config.env = {
         ...config.env,
@@ -56,7 +56,7 @@ export default defineConfig({
         sprint,
         regression,
       };
-      
+
       // Set baseUrl if provided
       if (environmentConfig.baseUrl) {
         config.baseUrl = environmentConfig.baseUrl;
@@ -66,7 +66,7 @@ export default defineConfig({
       on("task", {
         updateGoogleSheet,
       });
-      
+
       return config;
     },
   },
@@ -74,12 +74,12 @@ export default defineConfig({
 
 function getConfigurationByFile(file: string): Record<string, any> {
   const pathToConfigFile = path.resolve('./cypress/config', `${file}.json`);
-  
+
   if (!fs.existsSync(pathToConfigFile)) {
     console.error(`Could not find config file at ${pathToConfigFile}`);
     return {};
   }
-  
+
   try {
     return JSON.parse(fs.readFileSync(pathToConfigFile, 'utf-8'));
   } catch (error) {

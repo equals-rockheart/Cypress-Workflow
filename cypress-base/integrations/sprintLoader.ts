@@ -1,8 +1,8 @@
 export function loadSprintTests({
-  side,
+  testSuite,
   module,
 }: {
-  side: string;
+  testSuite: string;
   module: string;
 }) {
   const sprintContext = require.context(
@@ -22,16 +22,16 @@ export function loadSprintTests({
     sprintTitles[file] = title; // e.g. "v25"
   });
 
-  // Custom describe to filter by side
+  // Custom describe to filter by testSuite
   (global as any).describe = (title: string, fn: (this: Mocha.Suite) => void) => {
-    // Check if this describe block matches the requested side
-    // More flexible matching - check if the side string appears in the title
+    // Check if this describe block matches the requested testSuite
+    // More flexible matching - check if the testSuite string appears in the title
     const titleLower = title.toLowerCase();
-    const sideLower = side.toLowerCase();
+    const testSuiteLower = testSuite.toLowerCase();
     
-    // If side is provided and title doesn't contain the side string, skip this block
-    if (side && !titleLower.includes(sideLower)) {
-      return; // skip entire block if side doesn't match
+    // If testSuite is provided and title doesn't contain the testSuite string, skip this block
+    if (testSuite && !titleLower.includes(testSuiteLower)) {
+      return; // skip entire block if testSuite doesn't match
     }
 
     type SavedIt = { title: string; fn?: Mocha.Func; scope?: 'only' | 'skip' };
