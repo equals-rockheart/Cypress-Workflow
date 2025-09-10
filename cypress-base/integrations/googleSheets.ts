@@ -1,84 +1,76 @@
-let describeBlockResults = new Map();
+let describeBlockResults = new Map<
+    string,
+    {
+        describe: Mocha.Suite;
+        tests: { title: string; status: string }[];
+        allPassed: boolean;
+        sheet?: string;
+    }
+>();
 
-Cypress.Commands.add("updateSheetStatus", (test: Mocha.Test, status: string, sheet?: string) => {
-    const sheetUrl: string | undefined = 
-        sheet || (Cypress.env("regression") ? Cypress.env("regression-sheet") : undefined);
+//#region Helper
+function updateSheetStatus(testOrSuite: Mocha.Test | Mocha.Suite, status: string, sheet?: string): void {
+    const sheetUrl = sheet || getDefaultSheetUrl();
 
     if (!sheetUrl) {
         cy.log("⚠️ No sheet URL provided");
         return;
     }
 
-    // Extract spreadsheetId from URL
-    const match: RegExpMatchArray | null = sheetUrl.match(/\/d\/([a-zA-Z0-9-_]+)/);
+    const match = sheetUrl.match(/\/d\/([a-zA-Z0-9-_]+)/);
     if (!match) {
         cy.log("⚠️ Invalid Google Sheet link");
         return;
     }
-    const spreadsheetId: string = match[1];
+    
+    const spreadsheetId = match[1];
+    const title = testOrSuite.title || "";
+    const cellMatch = title.match(/\{([^}]+)\}/);
 
-    // Extract cell reference {C3} or {Sheet!C3} from test title
-    const title: string = test.title || "";
-    const cellMatch: RegExpMatchArray | null = title.match(/\{([^}]+)\}/);
+    if (!cellMatch) return;
 
-    if (!cellMatch) {
-        cy.log("⚠️ No cell reference in test title");
-        return;
-    }
-
-    let cellRef: string = "";
-    let sheetName: string;
+    let cellRef = "";
+    let sheetName = "";
 
     // Support {C3} or {Sheet!C3}
     if (cellMatch[1].includes("!")) {
-        // Explicit: {SheetName!C3}
-        const [explicitSheet, explicitCell] = cellMatch[1].split("!");
-        sheetName = explicitSheet;
-        cellRef = explicitCell;
+        [sheetName, cellRef] = cellMatch[1].split("!");
     } else {
-        // Default: {C3}
         cellRef = cellMatch[1];
-
-        // Determine sheet tab name from spec path
-        const specPath: string = Cypress.spec.relative || "";
-        sheetName = "Sheet1"; // fallback
-        if (specPath.includes("admin")) {
-            sheetName = "Admin";
-        } else if (specPath.includes("client")) {
-            sheetName = "Merchant";
-        }
+        
+        // Extract sheet name from spec path
+        const specPath = Cypress.spec.relative || "";
+        const pathMatch = specPath.match(/e2e[\\/](\w+)/i);
+        sheetName = pathMatch && pathMatch[1] 
+            ? pathMatch[1].charAt(0).toUpperCase() + pathMatch[1].slice(1)
+            : "Sheet1";
     }
 
-    // mapping
-    const value : string = 
-        status === "passed" 
-            ? Cypress.env("regression-test-pass") 
-            : Cypress.env("regression-test-fail");
-return
+    const cellValue = status === "passed"
+        ? Cypress.env("regression-test-pass")
+        : Cypress.env("regression-test-fail");
+
     cy.task("updateGoogleSheet", {
         spreadsheetId,
         sheetName,
         cellRef,
-        value,
+        cellValue,
     });
-});
-
-// Helper function to check if a title has cell reference
-function hasCellReference(title: string): boolean {
-    return /\{([^}]+)\}/.test(title);
 }
 
-// Helper function to extract sheet URL from title
 function extractSheetFromTitle(title: string): string | undefined {
     const match = title.match(/\[sheet:([^\]]+)\]/);
     return match ? match[1] : undefined;
 }
 
-// Helper function to get sheet URL for a test (with inheritance)
+function hasCellReference(title: string): boolean {
+    return /\{([^}]+)\}/.test(title);
+}
+
 function getSheetForTest(test: Mocha.Test): string | undefined {
     // First try to get sheet from the test (it block) title
     let sheet = extractSheetFromTitle(test.title);
-    
+
     // If not found, walk up the parent chain to find sheet in describe blocks
     if (!sheet) {
         let current = test.parent;
@@ -87,14 +79,11 @@ function getSheetForTest(test: Mocha.Test): string | undefined {
             current = current.parent;
         }
     }
-    
-    // Fall back to regression sheet
-    return sheet || (Cypress.env("regression") ? Cypress.env("regression-sheet") : undefined);
+
+    return sheet || getDefaultSheetUrl();
 }
 
-// Helper function to get describe block key
 function getDescribeBlockKey(test: Mocha.Test): string {
-    // Create a unique key for the describe block based on parent titles
     const parentTitles = [];
     let current = test.parent;
     while (current && current.title) {
@@ -104,27 +93,30 @@ function getDescribeBlockKey(test: Mocha.Test): string {
     return parentTitles.join(' > ');
 }
 
+function getDefaultSheetUrl(): string | undefined {
+    return Cypress.env("regression") ? Cypress.env("regression-sheet") : undefined;
+}
+
+//#endregion
+
+//#region Hooks
 // Track test results for describe blocks
 afterEach(function () {
-    const test: Mocha.Test | undefined = this.currentTest;
+    const test = this.currentTest;
     if (!test) return;
 
-    // Get sheet URL from title (with inheritance from describe blocks)
     const sheet = getSheetForTest(test);
-    console.log("afterEach sheet:", sheet);
-    
-    if (!Cypress.env("regression") && !sheet) return;
+    if (!getDefaultSheetUrl() && !sheet) return;
 
     const testStatus = test.state || "failed";
 
-    // Check if current test (it block) has cell reference
+    // Check if current test (it block) has cell reference then update
     if (hasCellReference(test.title)) {
-        // Update sheet for individual it block
-        cy.updateSheetStatus(test, testStatus, sheet);
+        updateSheetStatus(test, testStatus, sheet);
     }
 
     // Track results for describe blocks
-    let current: Mocha.Suite | undefined = test.parent;
+    let current = test.parent;
     while (current && current.title) {
         if (hasCellReference(current.title)) {
             const describeKey = getDescribeBlockKey(test);
@@ -134,17 +126,16 @@ afterEach(function () {
                     describe: current,
                     tests: [],
                     allPassed: true,
-                    sheet // Store the resolved sheet URL
+                    sheet: extractSheetFromTitle(current.title) || getDefaultSheetUrl(),
                 });
             }
 
-            const describeResult = describeBlockResults.get(describeKey);
+            const describeResult = describeBlockResults.get(describeKey)!;
             describeResult.tests.push({
                 title: test.title,
                 status: testStatus
             });
 
-            // If any test fails, mark the entire describe as failed
             if (testStatus !== "passed") {
                 describeResult.allPassed = false;
             }
@@ -155,20 +146,17 @@ afterEach(function () {
 
 // Update describe block status after all tests complete
 after(function () {
-    // Check if we have any describe blocks to process and if any have custom sheets
-    const hasCustomSheets = Array.from(describeBlockResults.values()).some(result => result.sheet);
-    
-    if (!Cypress.env("regression") && !hasCustomSheets) return;
+    const hasCustomSheets = Array.from(describeBlockResults.values()).some(
+        (result) => result.sheet
+    );
 
-    console.log("after - processing", describeBlockResults.size, "describe blocks");
+    if (!getDefaultSheetUrl() && !hasCustomSheets) return;
 
-    // Process all tracked describe blocks
-    describeBlockResults.forEach((result, key) => {
+    describeBlockResults.forEach((result) => {
         const finalStatus = result.allPassed ? "passed" : "failed";
-        console.log(`Processing describe block: ${key}, status: ${finalStatus}, sheet: ${result.sheet}`);
-        cy.updateSheetStatus(result.describe, finalStatus, result.sheet);
+        updateSheetStatus(result.describe, finalStatus, result.sheet);
     });
 
-    // Clear the results for next spec file
     describeBlockResults.clear();
 });
+//#endregion

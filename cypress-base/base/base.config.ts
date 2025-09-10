@@ -92,12 +92,12 @@ async function updateGoogleSheet({
   spreadsheetId,
   sheetName,
   cellRef,
-  value,
+  cellValue,
 }: {
   spreadsheetId: string;
   sheetName: string;
   cellRef: string;
-  value: string;
+  cellValue: string;
 }): Promise<number> {
   const auth = new google.auth.GoogleAuth({
     keyFile: path.resolve(process.cwd(), "secrets/service-account.json"),
@@ -110,8 +110,10 @@ async function updateGoogleSheet({
     spreadsheetId,
     range: `${sheetName}!${cellRef}`,
     valueInputOption: "USER_ENTERED",
-    requestBody: { values: [[value]] },
+    requestBody: { values: [[cellValue]] },
   });
+
+  console.log(res.statusText)
 
   return res.status; // 200 means success
 }
