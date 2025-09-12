@@ -237,7 +237,7 @@ npx cypress run --env configFile=develop,sprint=all
 npx cypress run --env configFile=develop,sprint=v25
 ```
 
-> 📖 For more details, see the full [Sprint Development Guide↗](docs/sprint.md).
+> 📖 For more details, see the full [Sprint Development Guide↗](cypress-base/docs/sprint.md).
 
 ---
 
@@ -289,7 +289,7 @@ npx cypress run --env configFile=develop,regression=true
 npx cypress run --env configFile=live,testRunKey=ABC123,testSuite=admin
 ```
 
-> 📖 *For more details, see the full  [Regression Development Guide↗](docs/regression.md)*
+> 📖 *For more details, see the full  [Regression Development Guide↗](cypress-base/docs/regression.md)*
 
 ---
 
@@ -333,7 +333,7 @@ Configure files in `/cypress/config/env/` for each environment:
   // Your other config
 }
 ```
-> 📖 *For more details, see the full [Integrations Guide↗](docs/integrations.md).*
+> 📖 *For more details, see the full [Integrations Guide↗](cypress-base/docs/integrations.md).*
 
 ---
 
@@ -412,9 +412,9 @@ npm run clean
 - [Cypress Typescript Configuration↗](https://docs.cypress.io/guides/tooling/typescript-support)
 
 ### Internal Resources
-- [Integrations↗](docs/integrations.md)
-- [Regression Development↗](docs/regression.md)
-- [Sprint Development↗](docs/sprint.md)
+- [Integrations↗](cypress-base/docs/integrations.md)
+- [Regression Development↗](cypress-base/docs/regression.md)
+- [Sprint Development↗](cypress-base/docs/sprint.md)
 - [QA Team Training Materials↗](https://oriental-wallet.atlassian.net/wiki/spaces/QA/pages/256147505/Training+Materials)
 
 ---
