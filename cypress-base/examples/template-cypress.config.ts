@@ -7,6 +7,8 @@ export default defineConfig({
       // Call base setup first
       baseConfig.e2e!.setupNodeEvents!(on, config);
 
+      // Rest of your custom setup can go here
+
       config.env = {
         ...config.env,
         // Custom environment variables for this config

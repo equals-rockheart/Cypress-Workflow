@@ -113,7 +113,5 @@ async function updateGoogleSheet({
     requestBody: { values: [[cellValue]] },
   });
 
-  console.log(res.statusText)
-
   return res.status; // 200 means success
 }

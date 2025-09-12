@@ -16,4 +16,4 @@
     "cypress-base/**/*.ts",
     "cypress-base/**/*.d.ts"
   ]
-} // rename to tsconfig.json
+}
