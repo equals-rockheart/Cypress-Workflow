@@ -1,6 +1,0 @@
-{
-  "devDependencies": {
-    "cypress": "^15.1.0",
-    "cypress-base": "file:./cypress-base"
-  }
-}

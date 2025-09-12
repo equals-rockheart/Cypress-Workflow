@@ -1,8 +1,7 @@
-/cypress/config/*
+/cypress/config
 
 node_modules
-cypress/videos
-cypress/screenshots
+cypress
 js/*.js
 
-/secrets/*
+secrets
