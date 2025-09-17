@@ -1,12 +1,12 @@
 declare namespace Cypress {
     interface Chainable {
-        
+
     /**
      * Update a single test case result in QATouch test run
      * @param options - Test case update options
      */
     updateQATouchTestCase(options: QATouchUpdateOptions): Cypress.Chainable<void>;
-    
+
     /**
      * Update multiple test case results in QATouch test run
      * @param options - Bulk test case update options
@@ -15,6 +15,7 @@ declare namespace Cypress {
 
     /**
      * Bulk update all collected test results
+     * Does not work when --env regression=true
      */
     bulkUpdateQATouch(options: { comments: string; projectKey?: string; testRunKey?: string }): Cypress.Chainable<void>;
 
@@ -28,6 +29,6 @@ declare namespace Cypress {
      * Attach a custom comment for the current test.
      */
     setQATouchComment(comment: string): Cypress.Chainable<void>;
-    
+
     }
 }

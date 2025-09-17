@@ -10,6 +10,9 @@ let describeBlockResults = new Map<
 
 //#region Helper
 function updateSheetStatus(testOrSuite: Mocha.Test | Mocha.Suite, status: string, sheet?: string): void {
+    const disableIntegration: string = Cypress.env('disable');
+    if (disableIntegration === 'gsheets' || disableIntegration === 'all') return;
+
     const sheetUrl = sheet || getDefaultSheetUrl();
 
     if (!sheetUrl) {
@@ -22,7 +25,7 @@ function updateSheetStatus(testOrSuite: Mocha.Test | Mocha.Suite, status: string
         cy.log("⚠️ Invalid Google Sheet link");
         return;
     }
-    
+
     const spreadsheetId = match[1];
     const title = testOrSuite.title || "";
     const cellMatch = title.match(/\{([^}]+)\}/);
@@ -41,7 +44,7 @@ function updateSheetStatus(testOrSuite: Mocha.Test | Mocha.Suite, status: string
         // Extract sheet name from spec path
         const specPath = Cypress.spec.relative || "";
         const pathMatch = specPath.match(/e2e[\\/](\w+)/i);
-        sheetName = pathMatch && pathMatch[1] 
+        sheetName = pathMatch && pathMatch[1]
             ? pathMatch[1].charAt(0).toUpperCase() + pathMatch[1].slice(1)
             : "Sheet1";
     }
@@ -94,7 +97,7 @@ function getDescribeBlockKey(test: Mocha.Test): string {
 }
 
 function getDefaultSheetUrl(): string | undefined {
-    return Cypress.env("regression") ? Cypress.env("regression-sheet") : undefined;
+    return Cypress.env("regression-sheet");
 }
 
 //#endregion
@@ -146,12 +149,6 @@ afterEach(function () {
 
 // Update describe block status after all tests complete
 after(function () {
-    const hasCustomSheets = Array.from(describeBlockResults.values()).some(
-        (result) => result.sheet
-    );
-
-    if (!getDefaultSheetUrl() && !hasCustomSheets) return;
-
     describeBlockResults.forEach((result) => {
         const finalStatus = result.allPassed ? "passed" : "failed";
         updateSheetStatus(result.describe, finalStatus, result.sheet);

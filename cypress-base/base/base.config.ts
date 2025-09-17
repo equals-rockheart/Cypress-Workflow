@@ -12,37 +12,37 @@ export default defineConfig({
       const configFile: string = config.env.baseConfig || config.env.configFile || 'staging';
       const environmentConfig = getConfigurationByFile(`env/${configFile}`);
       const qatouchConfig = getConfigurationByFile("qatouch");
+      const regressionSheetConfig: Record<string, any> = getConfigurationByFile("regression-sheet");
 
-      // Handle testRunKey and testSuite validation
-      const testRunKey: string = config.env.testRunKey || '';
-      const testSuite: string = config.env.testSuite || '';
-
-      // Handle sprint validation
+      // Determine test mode and integrations
       const sprint: string = config.env.sprint || '';
-
-      // Handle sheets validation
-      const regressionSheetConfig = getConfigurationByFile("regression-sheet");
       const regression: boolean = config.env.regression === true || config.env.regression === "true";
+      const disable: string = config.env.disable || 'none';
 
-      // If testRunKey is provided but testSuite is not, throw error
-      if (testRunKey && !testSuite) {
-        throw new Error('testSuite is required when testRunKey is provided (e.g., testSuite=admin)');
-      }
+      let specPattern: string | string[] = '';
 
-      // Set spec patterns based on testSuite
-      if (testSuite) {
-        config.specPattern = [
-          `cypress/e2e/${testSuite}/**/*.cy.{js,jsx,ts,tsx}`, 
-          'cypress/e2e/*.cy.ts'];
-      }
-
-      // Handle sprint spec patterns
+      // Handle spec patterns
       if (sprint) {
-        if (sprint === 'all') {
-          config.specPattern = 'cypress/e2e/sprint/*.cy.{js,jsx,ts,tsx}';
-        } else {
-          config.specPattern = `cypress/e2e/sprint/${sprint}.cy.{js,jsx,ts,tsx}`;
-        }
+        specPattern = sprint === 'all' 
+          ? 'cypress/e2e/sprint/*.cy.{js,jsx,ts,tsx}'
+          : `cypress/e2e/sprint/${sprint}.cy.{js,jsx,ts,tsx}`;
+      }
+      else if (regression) {
+        specPattern = [
+          'cypress/e2e/**/*.cy.{js,jsx,ts,tsx}',
+          '!cypress/e2e/sprint/**/*.cy.{js,jsx,ts,tsx}' // Exclude sprint folder
+        ];
+      }
+
+      if (specPattern) {
+        config.specPattern = specPattern;
+      }
+
+      const allowedDisables = ['none', 'gsheets', 'qatouch', 'all'] as const;
+      if (!allowedDisables.includes(disable as any)) {
+        throw new Error(
+          `Invalid --env disable=${disable}. Expected one of: ${allowedDisables.join(', ')}`
+        );
       }
 
       // Merge environment variables
@@ -51,10 +51,9 @@ export default defineConfig({
         ...environmentConfig,
         ...qatouchConfig,
         ...regressionSheetConfig,
-        testRunKey,
-        testSuite,
         sprint,
         regression,
+        disable,
       };
 
       // Set baseUrl if provided

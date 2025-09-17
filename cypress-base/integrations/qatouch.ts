@@ -43,6 +43,9 @@ function makeQATouchRequest(
   resultObject: Record<string, TestResult>,
   comments: string
 ) {
+  const disableIntegration: string = Cypress.env('disable');
+  if (disableIntegration === 'qatouch' || disableIntegration === 'all') return;
+
   const config = validateQATouchConfig(projectKey, testRunKey);
   if (!config) return;
 
@@ -71,7 +74,12 @@ function makeQATouchRequest(
       cy.log(`✅ QATouch updated successfully: ${testCount} test case(s)`);
     } else {
       const errorMsg = response.body?.error_msg || response.body || 'Unknown error';
-      cy.log(`❌ QATouch update failed: ${response.status} - ${errorMsg}`);
+      if (Cypress.env("regression")) {
+        cy.log(`❌ QATouch update failed in ${Cypress.spec?.name}: ${response.status} - ${errorMsg}`);
+      } else {
+        cy.log(`❌ QATouch update failed in ${Cypress.spec?.name} using ${testRunKey}: ${response.status} - ${errorMsg}`);
+      }
+      cy.log('Please check your test case number (if existing in test run) or your connection.');
     }
   });
 }
@@ -137,8 +145,14 @@ let currentTestResults: TestResult[] = [];
 let currentCommentedResults: { result: TestResult; comment: string }[] = [];
 let currentDescribeTitle: string = '';
 
+let regressionTestResults: TestResult[] = [];
+let regressionCommentedResults: { result: TestResult; comment: string }[] = [];
+
 // Bulk update all collected test results for current describe block
 Cypress.Commands.add('bulkUpdateQATouch', (options: { comments: string; projectKey?: string; testRunKey?: string }) => {
+  // Prevent separate update when loading Sprint Tests
+  if(Cypress.env('regression') === true) return;
+  
   const { comments, projectKey, testRunKey } = options;
 
   if (currentCommentedResults.length > 0){
@@ -168,9 +182,6 @@ Cypress.Commands.add('bulkUpdateQATouch', (options: { comments: string; projectK
 });
 
 afterEach(function () {
-  const sprint = Cypress.env('sprint');
-  if (!sprint) return; // Skip collection for local testing
-
   const titlePath = this.currentTest.titlePath();
   const describeTitle = titlePath[0];
 
@@ -181,7 +192,8 @@ afterEach(function () {
     console.log(`Describe Block: ${currentDescribeTitle}`);
   }
 
-  const caseNumber = extractCaseNumber(titlePath[1]); // e.g. "[C123] Some test"
+  const testTitle = titlePath[titlePath.length - 1];
+  const caseNumber = extractCaseNumber(testTitle); // e.g. "[C123] Some test"
   if (!caseNumber) return;
 
   // Use custom override if set
@@ -199,12 +211,19 @@ afterEach(function () {
   const comment: string | undefined = (Cypress as any).currentQATouchComment;
   const result: TestResult = { case: caseNumber, status: status};
 
+  const hasSkip = describeTitle.toLowerCase().includes("-skip");
+  const hasSprint = describeTitle.toLowerCase().includes("sprint");
+
   if (comment) {
     // push into comment bucket for individual updates
     currentCommentedResults.push({ result, comment });
+    if (!(hasSkip && hasSprint)) 
+      regressionCommentedResults.push({result, comment });
   } else {
     // push into bulk bucket
     currentTestResults.push(result);
+    if (!(hasSkip && hasSprint))
+      regressionTestResults.push(result);
   }
 
   (Cypress as any).currentQATouchStatus = undefined;
@@ -233,6 +252,57 @@ Cypress.Commands.add('setQATouchStatus', (status: QATouchStatus) => {
 Cypress.Commands.add('setQATouchComment', (comment: string) => {
   (Cypress as any).currentQATouchComment = comment;
   cy.log(`Comment: ${comment}`);
+});
+
+//#endregion
+
+//#region Regression Helper
+
+after(() => {
+  if (!Cypress.env('regression')) return;
+
+  const specPath = Cypress.spec.relative || "";
+  const match = specPath.match(/e2e[\\/](\w+)/i);
+
+  const specSuite = match ? match[1].toLowerCase() : "";
+
+  const projectKey = Cypress.env(`projectKey-${specSuite}`);
+  const testRunKey = Cypress.env(`regression-${specSuite}-testRunKey`);
+
+  if (specSuite && projectKey && testRunKey) {
+    if (regressionCommentedResults.length > 0){
+      regressionCommentedResults.forEach(({ result, comment }) => {
+        cy.updateQATouchTestCase({
+          caseCode: result.case,
+          status: result.status,
+          comments: `Cypress Automation - env: ${Cypress.env("env")}` + " | logs: " + comment,
+          projectKey,
+          testRunKey
+        });
+      });
+      regressionCommentedResults = [];
+    }
+    if (regressionTestResults.length > 0) {
+      cy.updateQATouchTestRun({
+        results: regressionTestResults,
+        comments: `Cypress Automation - env: ${Cypress.env("env")}`,
+        projectKey,
+        testRunKey
+      });
+      regressionTestResults = [];
+    } else {
+      cy.log('No bulk results collected for this describe block.');
+    }
+  } else {
+    let missingVars = [];
+
+    if (!projectKey) missingVars.push(`projectKey-${specSuite}`);
+    if (!testRunKey) missingVars.push(`regression-${specSuite}-testRunKey`);
+
+    cy.log(
+      `⚠️ Skipping QATouch bulk update for suite "${specSuite}" — missing env var(s): ${missingVars.join(", ")}`
+    );
+  }
 });
 
 //#endregion
