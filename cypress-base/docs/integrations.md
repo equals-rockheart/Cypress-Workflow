@@ -45,6 +45,13 @@ it("Currency Display {D9}", () => {
 it("Widget Loads {Deposit!D10} [sheet:https://docs.google.com/spreadsheets/d/CUSTOM_ID/]", () => {
   expect(true).to.be.true; // Posts to Deposit!D10 in override sheet
 });
+
+// Custom sheet override for all tests in this block
+// (except it-blocks with custom sheet URL)
+describe("Dashboard [sheet:https://docs.google.com/spreadsheets/d/CUSTOM_ID/]", () => {});
+
+// Block result: passes only if all tests inside pass, otherwise marked failed
+describe("Dashboard {Home!D9}", () => {});
 ```
 
 ---
@@ -58,7 +65,6 @@ it("Widget Loads {Deposit!D10} [sheet:https://docs.google.com/spreadsheets/d/CUS
   "regression-test-fail": "❌"
 }
 ```
-
 ---
 
 ## 📋 QATouch Integration
@@ -66,14 +72,15 @@ it("Widget Loads {Deposit!D10} [sheet:https://docs.google.com/spreadsheets/d/CUS
 ### Purpose
 - Syncs Cypress test results with **QATouch cases**  
 - Supports **bulk updates** after test runs  
-- Allows **custom status** + comments per test  
+- Allows **custom status** + **custom comments** per test  
 
 ---
 
 ### Setup
 1. Configure credentials in `qatouch.json`  
 2. Create a test run in QATouch and copy its `testRunKey`  
-3. Ensure project mapping exists (`projectKey-suiteName`)  
+3. Ensure project mapping exists (`projectKey-{Suite}`)  
+4. **(Optional)** Add (`regression-{Suite}-testRunKey`) for regression auto-hooks
 
 ```json
 // cypress/config/qatouch.json
@@ -82,6 +89,8 @@ it("Widget Loads {Deposit!D10} [sheet:https://docs.google.com/spreadsheets/d/CUS
   "domain": "rhgc",
   "projectKey-admin": "2aMB",
   "projectKey-client": "9xKQ"
+  "regression-admin-testRunKey": "REGRESSION_KEY"
+  "regression-client-testRunKey": "REGRESSION_KEY"
 }
 ```
 
@@ -126,7 +135,7 @@ describe("Admin", () => {
 ### Custom Status & Comments
 ```typescript
 it("72 - [ClientModules.Profile] Update user profile", () => {
-  cy.setQATouchStatus("RETEST");
+  cy.setQATouchStatus(QATouchStatus.BLOCKED);
   cy.setQATouchComment("Waiting for backend API fix");
 });
 ```
@@ -135,6 +144,16 @@ it("72 - [ClientModules.Profile] Update user profile", () => {
 `PASSED`, `FAILED`, `BLOCKED`, `RETEST`, `UNTESTED`, `NOT_APPLICABLE`, `IN_PROGRESS`, `HOLD`
 
 ---
+
+## 🚫 Disabling Integrations
+```bash
+# Supported values: qatouch, gsheets, all
+npx cypress open --env configFile=develop,regression=true,disable=qatouch
+npx cypress open --env configFile=develop,sprint=all,disable=gsheets
+
+# Disable all integrations (useful for local/dev runs)
+npx cypress open --env configFile=develop,disable=all
+```
 
 ## 🐞 Troubleshooting
 
@@ -148,5 +167,6 @@ it("72 - [ClientModules.Profile] Update user profile", () => {
 
 ---
 
-*Use this guide with both [Sprint Development](./sprint.md) and [Regression Guide](./regression.md).*  
+*Use this guide with both [Sprint Development](./sprint.md) and [Regression Guide](./regression.md).*
+
 *Last updated: September 2025*

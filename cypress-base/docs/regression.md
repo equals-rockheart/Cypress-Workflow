@@ -19,8 +19,6 @@ This document demonstrates how to write regression tests with automated **Google
 | **Case Number**     | 🟡 Optional → syncs with QATouch                            |
 | **Sheet Reference** | ✅ Required → syncs with Google Sheets updates              |
 | **Module Enum**     | ❌ Prohibited → module is already implied by spec file name |
-| **Test Run Key**    | 🟡 Optional → links to QATouch test run                     |
-
 
 ### Example Regression Tests
 ```ts
@@ -34,8 +32,8 @@ describe("Dashboard Elements {D5}", () => {
     });
 
     // Default mapping (updates Admin!D9 since spec is in /e2e/admin/)
-    it("Currency Display Validation {D9}", () => {
-        cy.log("❌ This test will FAIL and update Admin!D9");
+    it("45 - Currency Display Validation {D9}", () => {
+        cy.log("❌ This test will FAIL and update Admin!D9 and QATouch Case 45");
         expect(true).to.be.false;
     });
 });
@@ -60,7 +58,7 @@ By default, **sheet names are mapped based on test suite location**:
 
 ---
 
-## 🚀 Sprint Test Loading
+## 🧩 Sprint Test Loading
 
 **Purpose**: Loads sprint tests from `/e2e/sprint/**.cy.ts` and matches tests based on suite + module.
 
@@ -75,6 +73,7 @@ describe("Sprint Tests", () => {
     });
 });
 ```
+> ℹ️ Add `-skip` in describe title to skip **QATouch** update for *loaded sprint tests*
 
 ### Inheritance Behavior
 
@@ -109,8 +108,6 @@ it("17 - [Merchant.Checkout] GCash Payment {Deposit!D10} [sheet:https://docs.goo
 
 ---
 
-
-
 ## 🔗 QATouch Integration (Optional)
 
 Enable QATouch updates alongside Google Sheets for dual tracking.
@@ -119,7 +116,8 @@ Enable QATouch updates alongside Google Sheets for dual tracking.
 
 1. **API Credentials**: Configure `qatouch.json`  
 2. **Test Run**: Create test run in QATouch and copy `testRunKey`  
-3. **Project Mapping**: Ensure `projectKey-{suiteName}` exists  
+3. **Project Mapping**: Ensure `projectKey-{suiteName}` exists
+4. **Regression Mapping**: Add `regression-{suiteName}-testRunKey`
 
 ### Test Case Format
 
@@ -131,20 +129,16 @@ it("23 - Should display history", () => { ... });
 ```
 > ⚠️ Without the **Case Number prefix**, results **will not sync to QATouch**.
 
-### Required Hook
+### Requirement
 
-Include this hook inside the `describe` block 
+Update `qatouch.json` with **suite-specific** `testRunKey` (**auto-resolved based on suite location**).
 
-```ts
-const ADMIN_testRunKey = "TR_ABC123"; // From QATouch run URL
-
-after(() => {
-    cy.bulkUpdateQATouch({
-        comments: `Cypress Automation - env: ${Cypress.env("env")}`,
-        projectKey: Cypress.env("projectKey-admin"),
-        testRunKey: ADMIN_testRunKey
-    });
-});
+```json
+{
+    ...,
+    "regression-admin-testRunKey": "REGRESSION_ADMIN_TESTRUN_KEY",
+    "regression-client-testRunKey": "REGRESSION_CLIENT_TESTRUN_KEY",
+}
 ```
 
 ---
@@ -204,7 +198,8 @@ describe("Dashboard Other Tests {D15} [sheet:https://docs.google.com/spreadsheet
 {
   "apiToken": "your-api-token",
   "domain": "rhgc",
-  "projectKey-suiteName": "2aMB"
+  "projectKey-suite": "2aMB",
+  "regression-suite-testRunKey": "regression-suite-key"
 }
 ```
 
@@ -230,6 +225,37 @@ export enum AdminModules {
 
 ---
 
+## 🚀 Running Regression Tests
+
+### Development Mode
+```bash
+npx cypress open --env configFile=develop
+```
+
+### Headless Runs
+```bash
+# Run all regression tests
+npx cypress run --env configFile=develop,regression=true
+
+# Run against live
+npx cypress run --env configFile=live,regression=true
+```
+
+### 🚫 Disabling Integrations
+Supported: `qatouch` | `gsheets` | `all`
+```bash
+# Disable all integrations (local/dev runs)
+npx cypress open --env configFile=develop,disable=all
+
+# Disable QATouch only
+npx cypress run --env configFile=develop,regression=true,disable=qatouch
+
+# Disable Google Sheets only
+npx cypress run --env configFile=develop,regression=true,disable=gsheets
+```
+
+---
+
 ## 🐞 Troubleshooting
 
 | Issue                              | Fix |
@@ -238,20 +264,8 @@ export enum AdminModules {
 | "No sheet URL provided"           | Check `regression-sheet.json` |
 | Cell not updating                 | Ensure valid reference (A1, B2, …) |
 | Wrong sheet selected              | Check directory-to-sheet mapping |
-| QATouch sync failing | Check case number prefix and `testRunKey` validity |
+| QATouch sync failing | Check case number prefix and `testRunKey` |
 | Sprint tests not loading | Verify module enum usage and suite name matching |
-
----
-
-## 🧪 Testing the Integration
-
-1. **Run regression tests**:  
-    ```bash
-    npx cypress open --env configFile=develop,regression=true
-    ```
-2. **Verify Google Sheets updates** with pass/fail markers  
-3. **Check QATouch test run** (if configured) for synced results  
-4. **Validate sprint loading** by checking loaded test cases in output
 
 ---
 

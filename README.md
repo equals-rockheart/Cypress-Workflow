@@ -22,6 +22,7 @@ A comprehensive guide for setting up and running Cypress tests with **QATouch in
 ## 🚀 Quick Start
 
 ### Prerequisites
+- **Git** (latest recommended) 
 - **Node.js** (latest LTS recommended)
 - **QATouch account** (for sprint testing)
 - **Google Service Account** (for regression tracking)
@@ -33,11 +34,14 @@ A comprehensive guide for setting up and running Cypress tests with **QATouch in
 ```bash
 cd your-project-directory
 
+# Initialize git repository (skip if already inside a git repo)
+git init
+
 # Add cypress-base submodule
-git submodule add https://github.com/equals-rockheart/cypress-workflow.git cypress-base --branch main
+git submodule add -b main https://github.com/equals-rockheart/cypress-workflow.git cypress-base
 
 # Add sprint-cleaner submodule
-git submodule add https://github.com/equals-rockheart/cypress-workflow.git sprint-cleaner --branch main
+git submodule add -b main https://github.com/equals-rockheart/cypress-workflow.git sprint-cleaner
 ```
 
 #### 2. Install Dependencies
@@ -63,11 +67,9 @@ npm install
 **Setup config file:**
 
 ```bash
-# Rename existing config
-mv cypress.config.js cypress.config.ts
-
+# Rename existing config -> .bak
 # or Copy template from cypress-base
-mv cypress.config.js cypress.config.js.bak && cp cypress-base/template-cypress.config.ts cypress.config.ts
+npm --prefix ./cypress-base run setup:cypress.config
 ```
 
 **Update `cypress.config.ts`:**
@@ -96,13 +98,13 @@ export default defineConfig({
 #### Step 4: Setup TypeScript
 **Copy TypeScript config:**
 ```bash
-cp cypress-base/template-tsconfig.json tsconfig.json
+npm --prefix ./cypress-base run setup:tsconfig
 ```
 
-**Convert test files:**
+**Convert `.js` files:**
 ```bash
-# Rename all .js spec files to .ts
-find cypress/e2e -name "*.js" -exec sh -c 'mv "$1" "${1%.js}.ts"' _ {} \;
+# Rename all .js files to .ts
+npm --prefix ./cypress-base run rename:files
 ```
 
 #### Step 5: Enable Integrations
@@ -115,18 +117,13 @@ import '@integrations/googleSheets'
 #### Step 6: Create Config Files
 **Default Files:**
 ```bash
-# Create environment directory
-mkdir -p cypress/config/env
-
-# Create secrets directory
-mkdir -p /secrets
-
-# Create qatouch.json
-touch cypress/config/qatouch.json
-
-# Create regression config
-touch cypress/config/regression-sheet.json
-
+# Initialize project config & secrets
+# - Creates /cypress/config/env directory
+# - Creates /secrets directory
+# - Generates cypress/config/qatouch.json (default structure)
+# - Generates cypress/config/regression-sheet.json (default structure)
+# - Generates cypress/config/env/env.json (default environment file)
+npm --prefix ./cypress-base run setup:config
 ```
 
 ### Run Tests
@@ -134,10 +131,14 @@ touch cypress/config/regression-sheet.json
 # Interactive (configFile maps to /cypress/config/env/)
 npx cypress open --env configFile=develop
 
-# Sprint (QATouch integration)
-npx cypress run --env configFile=develop,sprint=v25
+# Interactive - Disable Integration (all | gsheets | qatouch)
+npx cypress open --env configFile=develop,disable=all
 
-# Regression (Google Sheets integration)
+# Sprint 
+npx cypress run --env configFile=develop,sprint=v25
+npx cypress run --env configFile=develop,sprint=all
+
+# Regression
 npx cypress run --env configFile=develop,regression=true
 ```
 
@@ -189,7 +190,7 @@ secrets/                   # Service account keys (gitignored)
 ### File Organization
 - **Naming**: Sprint 25 → `v25.cy.ts`, Sprint 26 → `v26.cy.ts`
 - **Location**: `/cypress/e2e/sprint/`
-- **Template**: Use `/cypress/e2e/sprint/base.ts`
+- **Template**: Use `/cypress-base/examples/base-sprint.ts`
 
 ### Test Structure Requirements
 
@@ -235,9 +236,12 @@ npx cypress run --env configFile=develop,sprint=all
 
 # Specific sprint
 npx cypress run --env configFile=develop,sprint=v25
+
+# Disable Integrations
+npx cypress run --env configFile=develop,sprint=v26,disable=gsheets
 ```
 
-> 📖 For more details, see the full [Sprint Development Guide↗](cypress-base/docs/sprint.md).
+> 📖 For more details, see the full [Sprint Development Guide↗](docs/sprint.md).
 
 ---
 
@@ -252,17 +256,17 @@ npx cypress run --env configFile=develop,sprint=v25
 | **Case Number**     | 🟡 Optional → syncs with QATouch                  |
 | **Sheet Reference** | ✅ Required → syncs with Google Sheets |
 | **Module Enum**     | ❌ Prohibited → module is already implied by spec file name  |
-| **Test Run Key**    | 🟡 Optional → links to QATouch test run                  |
 
 ```ts
+// e2e/admin/dashboard.cy.ts
 describe("Dashboard Elements {D5}", () => {
     it("GCash Solution Card Visibility {Merchant!D8}", () => {
         cy.log("✅ Updates Merchant sheet at D8");
         expect(true).to.be.true;
     });
 
-    it("Currency Display Validation {D9}", () => {
-        cy.log("❌ Updates Admin sheet at D9");
+    it("45 - Currency Display Validation {D9}", () => {
+        cy.log("❌ Updates Admin sheet at D9 and QATouch Case 45");
         expect(true).to.be.false;
     });
 });
@@ -282,20 +286,20 @@ describe("Dashboard Elements {D5}", () => {
 
 ### Running Regression Tests
 ```bash
-# Google Sheets integration
+# All spec files except /e2e/sprint
 npx cypress run --env configFile=develop,regression=true
 
-# QATouch integration (optional)
-npx cypress run --env configFile=live,testRunKey=ABC123,testSuite=admin
+# Disable Integrations
+npx cypress run --env configFile=develop,regression=true,disable=qatouch
 ```
 
-> 📖 *For more details, see the full  [Regression Development Guide↗](cypress-base/docs/regression.md)*
+> 📖 *For more details, see the full  [Regression Development Guide↗](docs/regression.md)*
 
 ---
 
 ## 🔗 Integration Setup
 
-### QATouch Integration (Sprint Testing)
+### QATouch Integration
 Edit `/cypress/config/qatouch.json`:
 ```json
 {
@@ -303,11 +307,12 @@ Edit `/cypress/config/qatouch.json`:
   "domain": "your-domain",
   "projectKey-admin": "ADMIN_PROJECT_KEY",
   "projectKey-client": "CLIENT_PROJECT_KEY",
-  "projectKey-api": "API_PROJECT_KEY"
+  "regression-admin-testRunKey": "REGRESSION_ADMIN_TESTRUN_KEY",
+  "regression-client-testRunKey": "REGRESSION_CLIENT_TESTRUN_KEY",
 }
 ```
 
-### Google Sheets Integration (Regression Testing)
+### Google Sheets Integration
 
 Configure `/cypress/config/regression-sheet.json`:
 ```json
@@ -333,7 +338,7 @@ Configure files in `/cypress/config/env/` for each environment:
   // Your other config
 }
 ```
-> 📖 *For more details, see the full [Integrations Guide↗](cypress-base/docs/integrations.md).*
+> 📖 *For more details, see the full [Integrations Guide↗](docs/integrations.md).*
 
 ---
 
@@ -412,9 +417,9 @@ npm run clean
 - [Cypress Typescript Configuration↗](https://docs.cypress.io/guides/tooling/typescript-support)
 
 ### Internal Resources
-- [Integrations↗](cypress-base/docs/integrations.md)
-- [Regression Development↗](cypress-base/docs/regression.md)
-- [Sprint Development↗](cypress-base/docs/sprint.md)
+- [Integrations↗](docs/integrations.md)
+- [Regression Development↗](docs/regression.md)
+- [Sprint Development↗](docs/sprint.md)
 - [QA Team Training Materials↗](https://oriental-wallet.atlassian.net/wiki/spaces/QA/pages/256147505/Training+Materials)
 
 ---

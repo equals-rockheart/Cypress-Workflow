@@ -226,16 +226,17 @@ npx cypress run --env configFile=develop,sprint=all
 npx cypress run --env configFile=develop,sprint=v25
 ```
 
-### Environment Examples
+### 🚫 Disabling Integrations
+Supported: `qatouch` | `gsheets` | `all`
 ```bash
-# Development
-npx cypress run --env configFile=develop,sprint=v25
+# Disable all integrations (local/dev runs)
+npx cypress open --env configFile=develop,disable=all
 
-# Staging
-npx cypress run --env configFile=staging,sprint=v25
+# Disable QATouch only
+npx cypress run --env configFile=develop,sprint=v25,disable=qatouch
 
-# Production
-npx cypress run --env configFile=live,sprint=v25
+# Disable Google Sheets only
+npx cypress run --env configFile=develop,sprint=all,disable=gsheets
 ```
 
 ---
