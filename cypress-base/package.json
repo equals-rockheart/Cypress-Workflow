@@ -11,5 +11,11 @@
   },
   "devDependencies": {
     "ts-node": "^10.9.2"
+  },
+  "scripts": {
+    "rename:files": "node scripts/rename-files.js",
+    "setup:cypress.config": "node scripts/setup-cypress.config.js",
+    "setup:tsconfig": "node scripts/setup-tsconfig.js",
+    "setup:config": "node scripts/setup-config.js"
   }
 }
