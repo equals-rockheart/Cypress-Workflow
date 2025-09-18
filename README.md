@@ -37,7 +37,7 @@ cd your-project-directory
 # Initialize git repository (skip if already inside a git repo)
 git init
 
-# Add cypress-base submodule
+# Add cypress-workflow as submodule
 git submodule add -b main https://github.com/equals-rockheart/cypress-workflow.git cypress-workflow
 ```
 
@@ -47,8 +47,8 @@ git submodule add -b main https://github.com/equals-rockheart/cypress-workflow.g
 ``` json
 {
   "devDependencies": {
-    "cypress": "^15.1.0",
-    "cypress-base": "file:./cypress-workflow/cypress-base" // add this line
+    "cypress": "^15.2.0",
+    "cypress-base": "file:./cypress-workflow" // add this line
   }
 }
 ```
@@ -66,7 +66,7 @@ npm install
 ```bash
 # Rename existing config -> .bak
 # or Copy template from cypress-base
-npm --prefix ./cypress-workflow/cypress-base run setup:cypress.config
+npm --prefix ./cypress-workflow run setup:cypress.config
 ```
 
 **Update `cypress.config.ts`:**
@@ -95,13 +95,13 @@ export default defineConfig({
 #### Step 4: Setup TypeScript
 **Copy TypeScript config:**
 ```bash
-npm --prefix ./cypress-workflow/cypress-base run setup:tsconfig
+npm --prefix ./cypress-workflow run setup:tsconfig
 ```
 
 **Convert `.js` files:**
 ```bash
 # Rename all .js files to .ts
-npm --prefix ./cypress-workflow/cypress-base run rename:files
+npm --prefix ./cypress-workflow run rename:files
 ```
 
 #### Step 5: Enable Integrations
@@ -120,7 +120,7 @@ import '@integrations/googleSheets'
 # - Generates cypress/config/qatouch.json (default structure)
 # - Generates cypress/config/regression-sheet.json (default structure)
 # - Generates cypress/config/env/env.json (default environment file)
-npm --prefix ./cypress-base run setup:config
+npm --prefix ./cypress-workflow run setup:config
 ```
 
 ### Run Tests
