@@ -4,7 +4,7 @@ const fs = require("fs");
 const path = require("path");
 
 // Resolve repo root (two levels up from cypress-base/scripts)
-const ROOT_DIR = path.resolve(__dirname, "../../");
+const ROOT_DIR = path.resolve(__dirname, "../../../");
 
 function ensureDir(dir) {
   fs.mkdirSync(dir, { recursive: true });

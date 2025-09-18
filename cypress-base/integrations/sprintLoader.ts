@@ -6,7 +6,7 @@ export function loadSprintTests({
   module: string;
 }) {
   const sprintContext = require.context(
-    "../../cypress/e2e/sprint",
+    "../../../cypress/e2e/sprint",
     false,
     /\.cy\.ts$/
   );

@@ -3,11 +3,11 @@
 const fs = require("fs");
 const path = require("path");
 
-const root = path.resolve(__dirname, "../../"); // repo root
+const root = path.resolve(__dirname, "../../../"); // repo root
 const jsConfig = path.join(root, "cypress.config.js");
 const tsConfig = path.join(root, "cypress.config.ts");
 const backup = path.join(root, "cypress.config.js.bak");
-const template = path.join(root, "cypress-base/examples/template-cypress.config.ts");
+const template = path.join(root, "cypress-workflow/cypress-base/examples/template-cypress.config.ts");
 
 if (fs.existsSync(jsConfig)) {
   // If cypress.config.js exists, back it up before renaming

@@ -38,10 +38,7 @@ cd your-project-directory
 git init
 
 # Add cypress-base submodule
-git submodule add -b main https://github.com/equals-rockheart/cypress-workflow.git cypress-base
-
-# Add sprint-cleaner submodule
-git submodule add -b main https://github.com/equals-rockheart/cypress-workflow.git sprint-cleaner
+git submodule add -b main https://github.com/equals-rockheart/cypress-workflow.git cypress-workflow
 ```
 
 #### 2. Install Dependencies
@@ -51,7 +48,7 @@ git submodule add -b main https://github.com/equals-rockheart/cypress-workflow.g
 {
   "devDependencies": {
     "cypress": "^15.1.0",
-    "cypress-base": "file:./cypress-base" // add this line
+    "cypress-base": "file:./cypress-workflow/cypress-base" // add this line
   }
 }
 ```
@@ -69,14 +66,14 @@ npm install
 ```bash
 # Rename existing config -> .bak
 # or Copy template from cypress-base
-npm --prefix ./cypress-base run setup:cypress.config
+npm --prefix ./cypress-workflow/cypress-base run setup:cypress.config
 ```
 
 **Update `cypress.config.ts`:**
 
 ```ts
 import { defineConfig } from "cypress";
-import baseConfig from "./cypress-base/base/base.config";
+import baseConfig from "./cypress-workflow/cypress-base/base/base.config";
 
 export default defineConfig({
   e2e: {
@@ -98,13 +95,13 @@ export default defineConfig({
 #### Step 4: Setup TypeScript
 **Copy TypeScript config:**
 ```bash
-npm --prefix ./cypress-base run setup:tsconfig
+npm --prefix ./cypress-workflow/cypress-base run setup:tsconfig
 ```
 
 **Convert `.js` files:**
 ```bash
 # Rename all .js files to .ts
-npm --prefix ./cypress-base run rename:files
+npm --prefix ./cypress-workflow/cypress-base run rename:files
 ```
 
 #### Step 5: Enable Integrations

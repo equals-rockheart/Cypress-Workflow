@@ -1,5 +1,5 @@
 import { defineConfig } from 'cypress';
-import baseConfig from './cypress-base/base/base.config';
+import baseConfig from './cypress-workflow/cypress-base/base/base.config';
 
 export default defineConfig({
   e2e: {

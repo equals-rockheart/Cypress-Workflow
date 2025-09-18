@@ -195,10 +195,10 @@ Update paths in `sprint_cleaner/package.json`:
 {
   "config": {
     "enumPaths": {
-      "admin": "../cypress/support/constants/adminModules.ts",
-      "client": "../cypress/support/constants/clientModules.ts"
+      "admin": "../../cypress/support/constants/adminModules.ts",
+      "client": "../../cypress/support/constants/clientModules.ts"
     },
-    "sprintDir": "../cypress/e2e/sprint"
+    "sprintDir": "../../cypress/e2e/sprint"
   }
 }
 ```

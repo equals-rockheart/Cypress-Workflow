@@ -3,8 +3,8 @@
 const fs = require("fs");
 const path = require("path");
 
-const root = path.resolve(__dirname, "../../"); // repo root
-const template = path.join(root, "cypress-base/examples/template-tsconfig.json");
+const root = path.resolve(__dirname, "../../../"); // repo root
+const template = path.join(root, "cypress-workflow/cypress-base/examples/template-tsconfig.json");
 const target = path.join(root, "tsconfig.json");
 
 if (fs.existsSync(target)) {

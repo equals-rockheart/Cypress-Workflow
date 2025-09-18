@@ -22,10 +22,10 @@
 
   "config": {
     "enumPaths": {
-      "admin": "../cypress/support/modules/adminModules.ts",
-      "client": "../cypress/support/modules/clientModules.ts", 
-      "api": "../cypress/support/modules/apiModules.ts"
+      "admin": "../../cypress/support/modules/adminModules.ts",
+      "client": "../../cypress/support/modules/clientModules.ts", 
+      "api": "../../cypress/support/modules/apiModules.ts"
     },
-    "sprintDir": "../cypress/e2e/sprint"
+    "sprintDir": "../../cypress/e2e/sprint"
   }
 }

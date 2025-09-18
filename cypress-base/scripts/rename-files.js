@@ -5,7 +5,7 @@ const fs = require("fs");
 const path = require("path");
 
 // Resolve repo root (two levels up from cypress-base/scripts)
-const ROOT_DIR = path.resolve(__dirname, "../../");
+const ROOT_DIR = path.resolve(__dirname, "../../../");
 
 // Default target: root/cypress/e2e (or custom path if passed as arg)
 const targetDir = path.resolve(ROOT_DIR, process.argv[2] || "cypress/");

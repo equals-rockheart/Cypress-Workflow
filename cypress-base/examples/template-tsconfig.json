@@ -1,9 +1,9 @@
 {
-  "extends": "./cypress-base/base/base.tsconfig.json",
+  "extends": "./cypress-workflow/cypress-base/base/base.tsconfig.json",
   "compilerOptions": {
     "baseUrl": "./",
     "paths": {
-      "@integrations/*": ["cypress-base/integrations/*"],
+      "@integrations/*": ["cypress-workflow/cypress-base/integrations/*"],
       "@pages/*": ["cypress/pages/*"],
       "@support/*": ["cypress/support/*"],
       "@modules/*": ["cypress/support/modules/*"]
@@ -13,7 +13,7 @@
   "include": [
     "cypress.config.ts",
     "cypress/**/*.ts",
-    "cypress-base/**/*.ts",
-    "cypress-base/**/*.d.ts"
+    "cypress-workflow/cypress-base/**/*.ts",
+    "cypress-workflow/cypress-base/**/*.d.ts"
   ]
 }
