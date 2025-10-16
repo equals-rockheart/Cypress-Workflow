@@ -24,8 +24,8 @@ This document demonstrates how to write sprint tests with automated **QATouch in
 
 ### Example Sprint Tests
 ```typescript
-import { AdminModules } from "@support/modules/adminModules";
-import { ClientModules } from "@support/modules/clientModules";
+import { AdminModule } from "@support/modules/adminModule";
+import { ClientModule } from "@support/modules/clientModule";
 
 describe("Admin", () => {
     const ADMIN_testRunKey = "JG3KB"; // From QATouch Test Run URL
@@ -38,11 +38,11 @@ describe("Admin", () => {
         });
     });
 
-    it(`64 - [${AdminModules.AccountDetails_Transactions}] Transactions Export Button is Visible`, () => {
+    it(`64 - [${AdminModule.AccountDetails_Transactions}] Transactions Export Button is Visible`, () => {
         expect(true).to.be.true;
     });
 
-    it(`65 - [${AdminModules.Dashboard}] Dashboard shows the correct currency`, () => {
+    it(`65 - [${AdminModule.Dashboard}] Dashboard shows the correct currency`, () => {
         expect(true).to.be.true;
     });
 });
@@ -58,7 +58,7 @@ describe("Client", () => {
         });
     });
 
-    it(`68 - [${ClientModules.AccountDetails_General}] Verify General Elements`, () => {
+    it(`68 - [${ClientModule.AccountDetails_General}] Verify General Elements`, () => {
         cy.setQATouchStatus("BLOCKED");
         cy.setQATouchComment("Database timeout – investigating");
     });
@@ -117,7 +117,7 @@ describe("Admin", () => {
 
 ### Custom Status & Comments
 ```typescript
-it(`72 - [${ClientModules.Profile}] Update user profile`, () => {
+it(`72 - [${ClientModule.Profile}] Update user profile`, () => {
     cy.setQATouchStatus("RETEST");
     cy.setQATouchComment("Waiting for backend API fix");
 });
@@ -135,16 +135,16 @@ Module enums provide consistency and allow regression test loading.
 
 ### Example Enums
 ```typescript
-// cypress/support/modules/adminModules.ts
-export enum AdminModules {
+// cypress/support/modules/adminModule.ts
+export enum AdminModule {
   Dashboard = "Dashboard",
   AccountDetails_General = "Account Details - General",
   AccountDetails_Balances = "Account Details - Balances",
   AccountDetails_Transactions = "Account Details - Transactions"
 }
 
-// cypress/support/modules/clientModules.ts
-export enum ClientModules {
+// cypress/support/modules/clientModule.ts
+export enum ClientModule {
   Dashboard = "Dashboard",
   Transactions = "Transactions",
   TopUp = "TopUp"
@@ -159,9 +159,9 @@ export enum ClientModules {
    Create all test shells with proper case numbers + module enums.
    ```ts
    describe("Admin", () ={
-        it(`17 - [${AdminModules.Dashboard}] Test Title`, () => {});
-        it(`23 - [${AdminModules.Transactions}] Test Title`, () => {});
-        it(`114 - [${AdminModules.Vaults}] Test Title`, () => {});
+        it(`17 - [${AdminModule.Dashboard}] Test Title`, () => {});
+        it(`23 - [${AdminModule.Transactions}] Test Title`, () => {});
+        it(`114 - [${AdminModule.Vaults}] Test Title`, () => {});
         // Other test cases
    })
    // Other Test Suite
@@ -195,8 +195,8 @@ Update paths in `sprint_cleaner/package.json`:
 {
   "config": {
     "enumPaths": {
-      "admin": "../../cypress/support/constants/adminModules.ts",
-      "client": "../../cypress/support/constants/clientModules.ts"
+      "admin": "../../cypress/support/modules/adminModule.ts",
+      "client": "../../cypress/support/modules/clientModule.ts"
     },
     "sprintDir": "../../cypress/e2e/sprint"
   }

@@ -106,7 +106,7 @@ Every test must begin with its **QATouch case number**:
 | `TR00072`  | `72`           |
 
 ```typescript
-it("64 - [AdminModules.Dashboard] Dashboard loads correctly", () => {
+it("64 - [AdminModule.Dashboard] Dashboard loads correctly", () => {
   expect(true).to.be.true;
 });
 ```
@@ -134,7 +134,7 @@ describe("Admin", () => {
 
 ### Custom Status & Comments
 ```typescript
-it("72 - [ClientModules.Profile] Update user profile", () => {
+it("72 - [ClientModule.Profile] Update user profile", () => {
   cy.setQATouchStatus(QATouchStatus.BLOCKED);
   cy.setQATouchComment("Waiting for backend API fix");
 });

@@ -108,6 +108,12 @@ afterEach(function () {
     const test = this.currentTest;
     if (!test) return;
 
+    const retries = test.currentRetry ?? 0;
+    const maxRetries = test.retries()?.runMode ?? 0;
+
+    if (!(retries === maxRetries || test.state !== 'failed'))
+        return; // skip this attempt
+
     const sheet = getSheetForTest(test);
     if (!getDefaultSheetUrl() && !sheet) return;
 

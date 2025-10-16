@@ -109,6 +109,7 @@ npm --prefix ./cypress-workflow run rename:files
 ```ts
 import '@integrations/qatouch'
 import '@integrations/googleSheets'
+import '@integrations/sprintLoader'
 ```
 
 #### Step 6: Create Config Files
@@ -195,7 +196,7 @@ secrets/                   # Service account keys (gitignored)
 | --------------- | ------------------------------------------------------------------ |
 | **Case Number** | ✅ Required → syncs with QATouch                                    |
 | **Module Enum** | ✅ Required → enables regression mapping                            |
-| **Enum Usage**  | ✅ Required → use predefined enums (e.g., `AdminModules.Dashboard`) |
+| **Enum Usage**  | ✅ Required → use predefined enums (e.g., `AdminModule.Dashboard`) |
 
 
 ```typescript
@@ -203,11 +204,11 @@ describe("Admin", () => {
   const ADMIN_testRunKey = "JG3KB"; // From QATouch Test Run
 
   // Required format: CaseNumber - [ModuleEnum] Test Title
-  it(`382 - [${AdminModules.Dashboard}] Verify dashboard loading`, () => {
+  it(`382 - [${AdminModule.Dashboard}] Verify dashboard loading`, () => {
     // Test implementation
   });
 
-  it(`385 - [${AdminModules.AccountDetails_General}] Update profile`, () => {
+  it(`385 - [${AdminModule.AccountDetails_General}] Update profile`, () => {
     // Test implementation
   });
 

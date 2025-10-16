@@ -64,12 +64,12 @@ By default, **sheet names are mapped based on test suite location**:
 
 ```typescript
 import { loadSprintTests } from "@integrations/sprintLoader";
-import { AdminModules } from "@modules/adminModules";
+import { AdminModule } from "@modules/adminModule";
 
 describe("Sprint Tests", () => {
     loadSprintTests({
         testSuite: "Admin",                // Match describe blocks containing "admin"
-        module: AdminModules.Dashboard     // Match it blocks with Dashboard module
+        module: AdminModule.Dashboard     // Match it blocks with Dashboard module
     });
 });
 ```
@@ -213,9 +213,9 @@ describe("Dashboard Other Tests {D15} [sheet:https://docs.google.com/spreadsheet
 ```
 
 ### Support Modules
-`cypress/support/modules/adminModules.ts`
+`cypress/support/modules/adminModule.ts`
 ```typescript
-export enum AdminModules {
+export enum AdminModule {
   Dashboard = "Dashboard",
   AccountDetails_General = "Account Details - General",
   AccountDetails_Balances = "Account Details - Balances",

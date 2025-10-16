@@ -182,54 +182,60 @@ Cypress.Commands.add('bulkUpdateQATouch', (options: { comments: string; projectK
 });
 
 afterEach(function () {
-  const titlePath = this.currentTest.titlePath();
-  const describeTitle = titlePath[0];
+  const retries = this.currentTest?.currentRetry ?? 0;
+  const maxRetries = this.currentTest?.retries()?.runMode ?? 0;
 
-  // Reset results if we're in a new describe block
-  if (describeTitle !== currentDescribeTitle) {
-    currentTestResults = [];
-    currentDescribeTitle = describeTitle;
-    console.log(`Describe Block: ${currentDescribeTitle}`);
-  }
+  if (!(retries === maxRetries || this.currentTest?.state !== 'failed'))
+    return; // skip this attempt
 
-  const testTitle = titlePath[titlePath.length - 1];
-  const caseNumber = extractCaseNumber(testTitle); // e.g. "[C123] Some test"
-  if (!caseNumber) return;
+    const titlePath = this.currentTest.titlePath();
+    const describeTitle = titlePath[0];
 
-  // Use custom override if set
-  let status: QATouchStatus;
-  if ((Cypress as any).currentQATouchStatus) {
-    status = (Cypress as any).currentQATouchStatus;
-  } else if (this.currentTest.state === 'passed') {
-    status = QATouchStatus.PASSED;
-  } else if (this.currentTest.state === 'failed') {
-    status = QATouchStatus.FAILED;
-  } else {
-    status = QATouchStatus.UNTESTED;
-  }
+    // Reset results if we're in a new describe block
+    if (describeTitle !== currentDescribeTitle) {
+      currentTestResults = [];
+      currentDescribeTitle = describeTitle;
+      console.log(`Describe Block: ${currentDescribeTitle}`);
+    }
 
-  const comment: string | undefined = (Cypress as any).currentQATouchComment;
-  const result: TestResult = { case: caseNumber, status: status};
+    const testTitle = titlePath[titlePath.length - 1];
+    const caseNumber = extractCaseNumber(testTitle); // e.g. "[C123] Some test"
+    if (!caseNumber) return;
 
-  const hasSkip = describeTitle.toLowerCase().includes("-skip");
-  const hasSprint = describeTitle.toLowerCase().includes("sprint");
+    // Use custom override if set
+    let status: QATouchStatus;
+    if ((Cypress as any).currentQATouchStatus) {
+      status = (Cypress as any).currentQATouchStatus;
+    } else if (this.currentTest.state === 'passed') {
+      status = QATouchStatus.PASSED;
+    } else if (this.currentTest.state === 'failed') {
+      status = QATouchStatus.FAILED;
+    } else {
+      status = QATouchStatus.UNTESTED;
+    }
 
-  if (comment) {
-    // push into comment bucket for individual updates
-    currentCommentedResults.push({ result, comment });
-    if (!(hasSkip && hasSprint)) 
-      regressionCommentedResults.push({result, comment });
-  } else {
-    // push into bulk bucket
-    currentTestResults.push(result);
-    if (!(hasSkip && hasSprint))
-      regressionTestResults.push(result);
-  }
+    const comment: string | undefined = (Cypress as any).currentQATouchComment;
+    const result: TestResult = { case: caseNumber, status: status};
 
-  (Cypress as any).currentQATouchStatus = undefined;
-  (Cypress as any).currentQATouchComment = undefined;
+    const hasSkip = describeTitle.toLowerCase().includes("-skip");
+    const hasSprint = describeTitle.toLowerCase().includes("sprint");
 
-  console.log(`Collected test result: ${caseNumber} = ${QATouchStatus[status]} (${this.currentTest.state})`);
+    if (comment) {
+      // push into comment bucket for individual updates
+      currentCommentedResults.push({ result, comment });
+      if (!(hasSkip && hasSprint))
+        regressionCommentedResults.push({result, comment });
+    } else {
+      // push into bulk bucket
+      currentTestResults.push(result);
+      if (!(hasSkip && hasSprint))
+        regressionTestResults.push(result);
+    }
+
+    (Cypress as any).currentQATouchStatus = undefined;
+    (Cypress as any).currentQATouchComment = undefined;
+
+    console.log(`Collected test result: ${caseNumber} = ${QATouchStatus[status]} (${this.currentTest.state})`);
 });
 
 // Utility function to extract case number from test title
