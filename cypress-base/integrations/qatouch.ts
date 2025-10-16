@@ -182,10 +182,10 @@ Cypress.Commands.add('bulkUpdateQATouch', (options: { comments: string; projectK
 });
 
 afterEach(function () {
-  const retries = this.currentTest?.currentRetry ?? 0;
-  const maxRetries = this.currentTest?.retries()?.runMode ?? 0;
+  const retries = Cypress.currentRetry ?? 0;
+  const maxRetries = Cypress.getTestRetries() ?? 0;
 
-  if (!(retries === maxRetries || this.currentTest?.state !== 'failed'))
+  if (this.currentTest?.state === 'failed' && retries < maxRetries)
     return; // skip this attempt
 
     const titlePath = this.currentTest.titlePath();

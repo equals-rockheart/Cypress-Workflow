@@ -108,10 +108,10 @@ afterEach(function () {
     const test = this.currentTest;
     if (!test) return;
 
-    const retries = test.currentRetry ?? 0;
-    const maxRetries = test.retries()?.runMode ?? 0;
+    const retries = Cypress.currentRetry ?? 0;
+    const maxRetries = Cypress.getTestRetries() ?? 0;
 
-    if (!(retries === maxRetries || test.state !== 'failed'))
+    if (this.currentTest?.state === 'failed' && retries < maxRetries)
         return; // skip this attempt
 
     const sheet = getSheetForTest(test);
