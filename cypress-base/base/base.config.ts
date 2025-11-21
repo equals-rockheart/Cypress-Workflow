@@ -60,10 +60,13 @@ export default defineConfig({
       if (environmentConfig.baseUrl) {
         config.baseUrl = environmentConfig.baseUrl;
       }
-
-      // Google API task
+      // TODO: Write logs in file
       on("task", {
         updateGoogleSheet,
+        integrationLog: ({ source, message }: { source: string; message: string }) => {
+          console.log(`\x1b[0m[\x1b[36mCW\x1b[0m → ${source}] ${message}`);
+          return null; // tasks must return something
+        },
       });
 
       return config;
