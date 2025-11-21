@@ -239,7 +239,7 @@ npx cypress run --env configFile=develop,sprint=v25
 npx cypress run --env configFile=develop,sprint=v26,disable=gsheets
 ```
 
-> 📖 For more details, see the full [Sprint Development Guide↗](docs/sprint.md).
+> 📖 For more details, see the full [Sprint Development Guide↗](cypress-base/docs/sprint.md).
 
 ---
 
@@ -257,14 +257,14 @@ npx cypress run --env configFile=develop,sprint=v26,disable=gsheets
 
 ```ts
 // e2e/admin/dashboard.cy.ts
-describe("Dashboard Elements {D5}", () => {
-    it("GCash Solution Card Visibility {Merchant!D8}", () => {
-        cy.log("✅ Updates Merchant sheet at D8");
+describe("Dashboard Elements {5}", () => {
+    it("GCash Solution Card Visibility {Merchant!8}", () => {
+        cy.log("✅ Updates Merchant sheet at row 8");
         expect(true).to.be.true;
     });
 
-    it("45 - Currency Display Validation {D9}", () => {
-        cy.log("❌ Updates Admin sheet at D9 and QATouch Case 45");
+    it("45 - Currency Display Validation {9}", () => {
+        cy.log("❌ Updates Admin sheet at row 9 and QATouch Case 45");
         expect(true).to.be.false;
     });
 });
@@ -291,7 +291,7 @@ npx cypress run --env configFile=develop,regression=true
 npx cypress run --env configFile=develop,regression=true,disable=qatouch
 ```
 
-> 📖 *For more details, see the full  [Regression Development Guide↗](docs/regression.md)*
+> 📖 *For more details, see the full  [Regression Development Guide↗](cypress-base/docs/regression.md)*
 
 ---
 
@@ -317,7 +317,9 @@ Configure `/cypress/config/regression-sheet.json`:
 {
   "regression-sheet": "https://docs.google.com/spreadsheets/d/your-sheet-id",
   "regression-test-pass": "✅",
-  "regression-test-fail": "❌"
+  "regression-test-fail": "❌",
+  "results-column": "D",
+  "remarks-column": "G"
 }
 ```
 
@@ -336,7 +338,7 @@ Configure files in `/cypress/config/env/` for each environment:
   // Your other config
 }
 ```
-> 📖 *For more details, see the full [Integrations Guide↗](docs/integrations.md).*
+> 📖 *For more details, see the full [Integrations Guide↗](cypress-base/docs/integrations.md).*
 
 ---
 
@@ -415,11 +417,11 @@ npm run clean
 - [Cypress Typescript Configuration↗](https://docs.cypress.io/guides/tooling/typescript-support)
 
 ### Internal Resources
-- [Integrations↗](docs/integrations.md)
-- [Regression Development↗](docs/regression.md)
-- [Sprint Development↗](docs/sprint.md)
+- [Integrations↗](cypress-base/docs/integrations.md)
+- [Regression Development↗](cypress-base/docs/regression.md)
+- [Sprint Development↗](cypress-base/docs/sprint.md)
 - [QA Team Training Materials↗](https://oriental-wallet.atlassian.net/wiki/spaces/QA/pages/256147505/Training+Materials)
 
 ---
 
-*Last updated: September 2025*
+*Last updated: November 2025*

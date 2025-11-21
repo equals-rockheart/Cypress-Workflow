@@ -280,6 +280,6 @@ npx cypress run --env configFile=develop,sprint=all,disable=gsheets
 
 ---
 
-*For regression testing with Google Sheets integration, see the [Regression Guide](./sprint.md).*
+*For regression testing with Google Sheets integration, see the [Regression Guide](./regression.md).*
 
-*Last updated: September 2025*
+*Last updated: November 2025*

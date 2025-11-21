@@ -18,32 +18,40 @@ Sheet names are derived from **test suite directories**:
 
 | Test Directory      | Sheet Name | Example     |
 | ------------------- | ---------- | ----------- |
-| `/e2e/admin/**`     | `Admin`    | `Admin!D5`  |
-| `/e2e/client/**`    | `Client`   | `Client!B3` |
-| `/e2e/merchant/**`  | `Merchant` | `Merchant!A1` |
+| `/e2e/admin/**`     | `Admin`    | `Admin!5`   |
+| `/e2e/client/**`    | `Client`   | `Client!3`  |
+| `/e2e/merchant/**`  | `Merchant` | `Merchant!1`|
+
+### Column Mapping
+Results and error messages are written to configured columns from config:
+
+| Column | Purpose | Values |
+| ------ | ------- | ------ |
+| `results-column` | Test status | ✅ / ❌ |
+| `remarks-column` | Error messages | Error details (on failure) |
 
 ---
 
 ### Override Options
-- **Cell Reference** → `{SheetName!Cell}` → explicit sheet + cell  
-- **Cell Only** → `{Cell}` → uses default mapping  
-- **Custom Sheet URL** → `[sheet:URL]` → override sheet entirely  
+- **Reference** → `{SheetName!Row}` → explicit sheet + row
+- **Row Only** → `{Row}` → uses default mapping
+- **Custom Sheet URL** → `[sheet:URL]` → override sheet entirely
 
 #### Example
 ```typescript
-// Explicit sheet + cell
-it("GCash Payment {Merchant!D8}", () => {
-  expect(true).to.be.true; // Updates Merchant!D8
+// Explicit sheet + row
+it("GCash Payment {Merchant!8}", () => {
+  expect(true).to.be.true; // Updates at Merchant sheet at row 8 (status & error message)
 });
 
 // Default (inherits Admin from /e2e/admin)
-it("Currency Display {D9}", () => {
-  expect(true).to.be.false; // Updates Admin!D9
+it("Currency Display {9}", () => {
+  expect(true).to.be.false; // Updates Admin sheet at row 9 (status & error message)
 });
 
 // Override with custom sheet URL
-it("Widget Loads {Deposit!D10} [sheet:https://docs.google.com/spreadsheets/d/CUSTOM_ID/]", () => {
-  expect(true).to.be.true; // Posts to Deposit!D10 in override sheet
+it("Widget Loads {Deposit!10} [sheet:https://docs.google.com/spreadsheets/d/CUSTOM_ID/]", () => {
+  expect(true).to.be.true; // Posts to Deposit sheet in override sheetURL
 });
 
 // Custom sheet override for all tests in this block
@@ -51,7 +59,7 @@ it("Widget Loads {Deposit!D10} [sheet:https://docs.google.com/spreadsheets/d/CUS
 describe("Dashboard [sheet:https://docs.google.com/spreadsheets/d/CUSTOM_ID/]", () => {});
 
 // Block result: passes only if all tests inside pass, otherwise marked failed
-describe("Dashboard {Home!D9}", () => {});
+describe("Dashboard {Home!9}", () => {});
 ```
 
 ---
@@ -62,7 +70,9 @@ describe("Dashboard {Home!D9}", () => {});
 {
   "regression-sheet": "https://docs.google.com/spreadsheets/d/YOUR_DEFAULT_SHEET_ID/",
   "regression-test-pass": "✅",
-  "regression-test-fail": "❌"
+  "regression-test-fail": "❌",
+  "results-column": "D",
+  "remarks-column": "G"
 }
 ```
 ---
@@ -157,16 +167,16 @@ npx cypress open --env configFile=develop,disable=all
 
 ## 🐞 Troubleshooting
 
-| Issue                     | Fix |
-| -------------------------- | --- |
-| "Invalid test run key"     | Verify QATouch run exists |
-| "Case number not found"    | Check test prefix matches QATouch case ID |
-| "Project key mismatch"     | Verify `projectKey-{suite}` in `qatouch.json` |
-| "Invalid Google Sheet link"| Verify URL format + permissions |
-| Cell not updating          | Ensure valid reference `{Sheet!Cell}` or `{Cell}` |
+| Issue                       | Fix |
+| --------------------------- | --- |
+| "Invalid test run key"      | Verify QATouch run exists |
+| "Case number not found"     | Check test prefix matches QATouch case ID |
+| "Project key mismatch"      | Verify `projectKey-{suite}` in `qatouch.json` |
+| "Invalid Google Sheet link" | Verify URL format + permissions |
+| Cell not updating           | Ensure valid reference `{Sheet!Cell}` or `{Cell}` |
 
 ---
 
 *Use this guide with both [Sprint Development](./sprint.md) and [Regression Guide](./regression.md).*
 
-*Last updated: September 2025*
+*Last updated: November 2025*

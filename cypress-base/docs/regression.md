@@ -22,39 +22,89 @@ This document demonstrates how to write regression tests with automated **Google
 
 ### Example Regression Tests
 ```ts
-// Describe with cell reference (updates Admin!D5)
-describe("Dashboard Elements {D5}", () => {
+// Describe with cell reference (updates Admin sheet at row 5)
+// Block result: passes only if all tests inside pass, otherwise marked failed
+describe("Dashboard Elements {5}", () => {
     
-    // Explicit sheet override (updates Merchant!D8)
-    it("GCash Solution Card Visibility {Merchant!D8}", () => {
-        cy.log("✅ This test will PASS and update Merchant!D8");
+    // Explicit sheet override (updates Client sheet at row 8)
+    it("45 - GCash Solution Card Visibility {Client!8}", () => {
+        cy.log("✅ This test will PASS and update and QATouch Case 45");
         expect(true).to.be.true;
     });
 
-    // Default mapping (updates Admin!D9 since spec is in /e2e/admin/)
-    it("45 - Currency Display Validation {D9}", () => {
-        cy.log("❌ This test will FAIL and update Admin!D9 and QATouch Case 45");
+    // Default mapping (updates Admin sheet at row 9 since spec is in /e2e/admin/)
+    it("Currency Display Validation {9}", () => {
+        cy.log("❌ This test will FAIL and update Admin sheet at row 9 (status & error message)");
         expect(true).to.be.false;
     });
 });
 ```
+
 ---
 
-## 📝 Sheet Mapping Configuration
+## 📝 Mapping
 
-### Default Mapping
+### Sheet Name Mapping
 By default, **sheet names are mapped based on test suite location**:
 
-| Test Directory      | Sheet Name | Example |
-|--------------------|------------|---------|
-| `/e2e/admin/**`    | `Admin`    | `Admin!D5` |
-| `/e2e/client/**`   | `Client`   | `Client!B3` |
-| `/e2e/merchant/**` | `Merchant` | `Merchant!A1` |
+| Test Directory   | Sheet Name | Example    |
+|------------------|------------|------------|
+| `/e2e/admin/**`  | `Admin`    | `Admin!5`  |
+| `/e2e/client/**` | `Client`   | `Client!3` |
+| `/e2e/user/**`   | `User`     | `User!1`   |
+
+### Column Mapping
+Results and error messages are written to configured columns from config:
+
+| Column | Purpose | Values |
+| ------ | ------- | ------ |
+| `results-column` | Test status | ✅ / ❌ |
+| `remarks-column` | Error messages | Error details (on failure) |
 
 ### Override Options
-- **Cell Reference** → `{SheetName!Cell}` → explicit sheet + cell  
-- **Cell Only** → `{Cell}` → uses default suite mapping  
-- **Custom Sheet URL** → `[sheet:URL]` → override sheet entirely  
+- **Reference** → `{SheetName!Row}` → explicit sheet + row
+- **Row Only** → `{Row}` → uses default mapping
+- **Custom Sheet URL** → `[sheet:URL]` → override sheet entirely
+
+---
+
+## 📂 Custom Sheet URL Examples
+
+### Test-Level Override
+```typescript
+// Uses default sheetURL (from config)
+// Passes only if all tests inside pass, otherwise marked failed
+describe("Payment Flow Tests {15}", () => {
+
+    // Custom sheet for specific test
+    it("Gcash Payment Processing {13} [sheet:https://docs.google.com/spreadsheets/d/CUSTOM_SHEET_ID/]", () => {
+        cy.log("Updates to custom sheetURL");
+        expect(true).to.be.true;
+    });
+
+    // Default sheetURL mapping
+    it("Withdrawal Process {14}", () => {
+        cy.log("Updates to default sheetURL (from config) and update sheet based on suite location");
+        expect(true).to.be.true;
+    });
+});
+```
+
+### Describe-Level Override
+```typescript
+describe("Dashboard Other Tests {15} [sheet:https://docs.google.com/spreadsheets/d/1XYZ456_ANOTHER_SAMPLE_ID/]", () => {
+
+    //Inherits custom sheetURL from describe block
+    it("31 - Dashboard Other Test 1 {16}", () => {
+        expect(true).to.be.true;
+    });
+
+    // Overrides custom sheetURL from describe block
+    it("32 - Dashboard Other Test 2 {17} [sheet:https://docs.google.com/spreadsheets/d/1OVERRIDE_SHEET_ID/]", () => {
+        expect(true).to.be.true;
+    });
+});
+```
 
 ---
 
@@ -97,12 +147,12 @@ describe("Sprint Tests [sheet:https://docs.google.com/spreadsheets/d/CUSTOM_ID/]
 **Test-Level Sheet/Cell Reference**:
 ```typescript
 // In sprint file - overrides both suite location and custom sheet URL
-it("53 - [Merchant.Checkout] Widget Loads {Merchant!D8}", () => {
-    expect(true).to.be.true; // Posts to Merchant!D8
+it("53 - [User.Checkout] Widget Loads {User!8}", () => {
+    expect(true).to.be.true; // Posts to User sheet at row 8 even if spec is located
 });
 
-it("17 - [Merchant.Checkout] GCash Payment {Deposit!D10} [sheet:https://docs.google.com/spreadsheets/d/OVERRIDE_ID/]", () => {
-    expect(true).to.be.true; // Posts to override sheet at Deposit!D10
+it("17 - [User.Checkout] GCash Payment {Deposit!10} [sheet:https://docs.google.com/spreadsheets/d/OVERRIDE_ID/]", () => {
+    expect(true).to.be.true; // Posts to override sheetURL at Deposit sheet at row 10
 });
 ```
 
@@ -143,43 +193,6 @@ Update `qatouch.json` with **suite-specific** `testRunKey` (**auto-resolved base
 
 ---
 
-## 📂 Custom Sheet URL Examples
-
-### Test-Level Override
-```typescript
-describe("Payment Flow Tests {D15}", () => {
-    
-    // Custom sheet for specific test
-    it("Gcash Payment Processing {D13} [sheet:https://docs.google.com/spreadsheets/d/CUSTOM_SHEET_ID/]", () => {
-        cy.log("Updates custom sheet at D13");
-        expect(true).to.be.true;
-    });
-    
-    // Default sheet mapping
-    it("Withdrawal Process {D14}", () => {
-        cy.log("Updates default sheet based on suite location");
-        expect(true).to.be.true;
-    });
-});
-```
-
-### Describe-Level Override
-```typescript
-describe("Dashboard Other Tests {D15} [sheet:https://docs.google.com/spreadsheets/d/1XYZ456_ANOTHER_SAMPLE_ID/]", () => {
-
-    //Inherits custom sheet URL from describe block
-    it("31 - Dashboard Other Test 1 {D16}", () => {
-        expect(true).to.be.true;
-    });
-
-    // Overrides custom sheet URL from describe block
-    it("32 - Dashboard Other Test 2 {D17} [sheet:https://docs.google.com/spreadsheets/d/1OVERRIDE_SHEET_ID/]", () => {
-        expect(true).to.be.true;
-    });
-});
-```
----
-
 ## ⚙️ Configuration Files Reference
 
 ### Google Sheets Integration
@@ -188,7 +201,9 @@ describe("Dashboard Other Tests {D15} [sheet:https://docs.google.com/spreadsheet
 {
   "regression-sheet": "https://docs.google.com/spreadsheets/d/YOUR_DEFAULT_SHEET_ID/",
   "regression-test-pass": "✅",
-  "regression-test-fail": "❌"
+  "regression-test-fail": "❌",
+  "results-column": "D",
+  "remarks-column": "G"
 }
 ```
 
@@ -258,12 +273,15 @@ npx cypress run --env configFile=develop,regression=true,disable=gsheets
 
 ## 🐞 Troubleshooting
 
-| Issue                              | Fix |
-|-----------------------------------|-----|
-| "Invalid Google Sheet link"       | Verify URL format + permissions |
-| "No sheet URL provided"           | Check `regression-sheet.json` |
-| Cell not updating                 | Ensure valid reference (A1, B2, …) |
-| Wrong sheet selected              | Check directory-to-sheet mapping |
+| Issue | Fix |
+|-------|-----|
+| "Invalid Google Sheet link" | Verify URL format + permissions |
+| "results-column not found in /cypress/config/regression-sheet.json" | Add `results-column` to config file |
+| "Google Sheet URL not found for the following tests" | Add `[sheet:URL]` tag to test or describe block or check config file |
+| "invalid row number" | Ensure cell reference uses valid number format `{3}` or `{Sheet!3}` |
+| Cell not updating | Ensure correct sheet and integration is not disabled` |
+| Wrong sheet selected | Check directory-to-sheet mapping or use explicit `{SheetName!3}` |
+| Error messages not appearing | Verify `remarks-column` is configured in regression-sheet.json |
 | QATouch sync failing | Check case number prefix and `testRunKey` |
 | Sprint tests not loading | Verify module enum usage and suite name matching |
 
@@ -271,4 +289,4 @@ npx cypress run --env configFile=develop,regression=true,disable=gsheets
 
 *For sprint-focused testing, see the [Sprint Development guide](./sprint.md).*
 
-*Last updated: September 2025*
+*Last updated: November 2025*
