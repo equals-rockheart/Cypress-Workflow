@@ -2,27 +2,29 @@ let describeBlockResults = new Map<
     string,
     {
         describe: Mocha.Suite;
-        tests: { title: string; status: string }[];
         allPassed: boolean;
         sheet?: string;
     }
 >();
 
+let testResults: {
+    test: Mocha.Test;
+    status: "passed" | "failed";
+    sheet: string;
+    errorMessage?: string | null;
+}[] = [];
+
 //#region Helper
-function updateSheetStatus(testOrSuite: Mocha.Test | Mocha.Suite, status: string, sheet?: string): void {
+
+function updateSheetStatus(testOrSuite: Mocha.Test | Mocha.Suite, status: string, sheet: string, errorMessage?: string): void {
     const disableIntegration: string = Cypress.env('disable');
+
     if (disableIntegration === 'gsheets' || disableIntegration === 'all') return;
 
-    const sheetUrl = sheet || getDefaultSheetUrl();
+    const match = sheet.match(/\/d\/([a-zA-Z0-9-_]+)/);
 
-    if (!sheetUrl) {
-        cy.log("⚠️ No sheet URL provided");
-        return;
-    }
-
-    const match = sheetUrl.match(/\/d\/([a-zA-Z0-9-_]+)/);
     if (!match) {
-        cy.log("⚠️ Invalid Google Sheet link");
+        cy.task("integrationLog", { source: "gsheets", message: `\x1b[31mInvalid Google Sheet link: ${sheet} —\x1b[33m update skipped` });
         return;
     }
 
@@ -32,37 +34,63 @@ function updateSheetStatus(testOrSuite: Mocha.Test | Mocha.Suite, status: string
 
     if (!cellMatch) return;
 
-    let cellRef = "";
+    let rowNumber = "";
     let sheetName = "";
 
-    // Support {C3} or {Sheet!C3}
+    // Support {3} or {Sheet!3}
     if (cellMatch[1].includes("!")) {
-        [sheetName, cellRef] = cellMatch[1].split("!");
+        [sheetName, rowNumber] = cellMatch[1].split("!");
     } else {
-        cellRef = cellMatch[1];
-        
+        rowNumber = cellMatch[1];
+
         // Extract sheet name from spec path
         const specPath = Cypress.spec.relative || "";
         const pathMatch = specPath.match(/e2e[\\/](\w+)/i);
+
         sheetName = pathMatch && pathMatch[1]
             ? pathMatch[1].charAt(0).toUpperCase() + pathMatch[1].slice(1)
             : "Sheet1";
     }
 
+    const rowNumInt = parseInt(rowNumber, 10);
+
+    if (isNaN(rowNumInt) || rowNumInt <= 0) {
+        cy.task("integrationLog", { source: "gsheets", message: `\x1b[31minvalid row number: ${testOrSuite.title} —\x1b[33m update skipped` } );
+        return;
+    }
+
+    const resultsColumn = Cypress.env("results-column") || null;
+    const remarksColumn = Cypress.env("remarks-column") || null;
+
     const cellValue = status === "passed"
         ? Cypress.env("regression-test-pass")
         : Cypress.env("regression-test-fail");
 
+    if (!resultsColumn) {
+        cy.task("integrationLog", { source: "gsheets", message: `\x1b[31mresults-column not found in /cypress/config/regression-sheet.json —\x1b[33m update skipped`});
+        return;
+    }
+
     cy.task("updateGoogleSheet", {
         spreadsheetId,
         sheetName,
-        cellRef,
+        cellRef: `${resultsColumn}${rowNumber}`,
         cellValue,
     });
+
+    if (errorMessage && remarksColumn) {
+        cy.task("updateGoogleSheet", {
+            spreadsheetId,
+            sheetName,
+            cellRef: `${remarksColumn}${rowNumber}`,
+            cellValue: errorMessage
+        });
+    }
 }
 
 function extractSheetFromTitle(title: string): string | undefined {
     const match = title.match(/\[sheet:([^\]]+)\]/);
+
     return match ? match[1] : undefined;
 }
 
@@ -70,30 +98,29 @@ function hasCellReference(title: string): boolean {
     return /\{([^}]+)\}/.test(title);
 }
 
-function getSheetForTest(test: Mocha.Test): string | undefined {
-    // First try to get sheet from the test (it block) title
-    let sheet = extractSheetFromTitle(test.title);
+function getSheetForNode(node: Mocha.Test | Mocha.Suite): string {
+    let sheet = extractSheetFromTitle(node.title);
+    let current = node.parent;
 
-    // If not found, walk up the parent chain to find sheet in describe blocks
-    if (!sheet) {
-        let current = test.parent;
-        while (current && current.title && !sheet) {
-            sheet = extractSheetFromTitle(current.title);
-            current = current.parent;
-        }
+    while (!sheet && current && current.title) {
+        sheet = extractSheetFromTitle(current.title);
+        current = current.parent;
     }
 
     return sheet || getDefaultSheetUrl();
 }
 
-function getDescribeBlockKey(test: Mocha.Test): string {
-    const parentTitles = [];
-    let current = test.parent;
+function getDescribeBlockKey(suite: Mocha.Suite): string {
+    const titles: string[] = [];
+
+    let current: Mocha.Suite | undefined = suite;
+
     while (current && current.title) {
-        parentTitles.unshift(current.title);
+        titles.unshift(current.title);
         current = current.parent;
     }
-    return parentTitles.join(' > ');
+
+    return titles.join(" > ");
 }
 
 function getDefaultSheetUrl(): string | undefined {
@@ -103,7 +130,7 @@ function getDefaultSheetUrl(): string | undefined {
 //#endregion
 
 //#region Hooks
-// Track test results for describe blocks
+
 afterEach(function () {
     const test = this.currentTest;
     if (!test) return;
@@ -111,41 +138,40 @@ afterEach(function () {
     const retries = Cypress.currentRetry ?? 0;
     const maxRetries = Cypress.getTestRetries() ?? 0;
 
+    const errorMessage = test.err?.message || null;
+
     if (this.currentTest?.state === 'failed' && retries < maxRetries)
         return; // skip this attempt
 
-    const sheet = getSheetForTest(test);
-    if (!getDefaultSheetUrl() && !sheet) return;
+    const sheet = getSheetForNode(test);
+    const testStatus = (test.state || "failed") as "passed" | "failed";
 
-    const testStatus = test.state || "failed";
-
-    // Check if current test (it block) has cell reference then update
+    // Check if current test (it block) has cell reference then push to queue
     if (hasCellReference(test.title)) {
-        updateSheetStatus(test, testStatus, sheet);
+        testResults.push({
+            test,
+            status: testStatus,
+            sheet,
+            errorMessage
+        });
     }
 
     // Track results for describe blocks
     let current = test.parent;
     while (current && current.title) {
         if (hasCellReference(current.title)) {
-            const describeKey = getDescribeBlockKey(test);
+            const describeKey = getDescribeBlockKey(current);
 
             if (!describeBlockResults.has(describeKey)) {
                 describeBlockResults.set(describeKey, {
                     describe: current,
-                    tests: [],
                     allPassed: true,
-                    sheet: extractSheetFromTitle(current.title) || getDefaultSheetUrl(),
+                    sheet: getSheetForNode(current),
                 });
             }
 
-            const describeResult = describeBlockResults.get(describeKey)!;
-            describeResult.tests.push({
-                title: test.title,
-                status: testStatus
-            });
-
-            if (testStatus !== "passed") {
+            if (test.state !== "passed") {
+                const describeResult = describeBlockResults.get(describeKey)!;
                 describeResult.allPassed = false;
             }
         }
@@ -153,13 +179,27 @@ afterEach(function () {
     }
 });
 
-// Update describe block status after all tests complete
 after(function () {
+    const missingSheetTests: string[] = [];
+
+    testResults.forEach((result) => {
+        if (!result.sheet) {
+            missingSheetTests.push(result.test.fullTitle());
+        }
+        updateSheetStatus(result.test, result.status, result.sheet, result.errorMessage);
+    });
+
     describeBlockResults.forEach((result) => {
         const finalStatus = result.allPassed ? "passed" : "failed";
         updateSheetStatus(result.describe, finalStatus, result.sheet);
     });
 
+    if (missingSheetTests.length > 0) {
+        cy.task("integrationLog", { source: "gsheets", message: `\x1b[33mGoogle Sheet URL not found for the following tests:\n- ${missingSheetTests.join("\n- ")}` });
+    }
+
     describeBlockResults.clear();
+    testResults = [];
 });
+
 //#endregion
