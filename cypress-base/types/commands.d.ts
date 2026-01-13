@@ -30,5 +30,26 @@ declare namespace Cypress {
      */
     setQATouchComment(comment: string): Cypress.Chainable<void>;
 
+    /**
+     * Update a Google Sheet cell
+     * @returns HTTP status code (200 = success)
+     */
+    updateGoogleSheet(params: {
+        spreadsheetId: string;
+        sheetName: string;
+        cellRef: string;
+        cellValue: string;
+    }): Cypress.Chainable<number>;
+
+    /**
+     * Read a single Google Sheet cell.
+     * @returns Cell value or null if empty
+     */
+    readGoogleSheetCell(params: {
+        spreadsheetId: string;
+        sheetName: string;
+        cellRef: string;
+    }): Chainable<string | null>;
+
     }
 }

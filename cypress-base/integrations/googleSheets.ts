@@ -203,3 +203,28 @@ after(function () {
 });
 
 //#endregion
+
+//#region Commands
+
+Cypress.Commands.add("updateGoogleSheet",
+    (params: {
+        spreadsheetId: string;
+        sheetName: string;
+        cellRef: string;
+        cellValue: string;
+    }) => {
+        return cy.task<number>("updateGoogleSheet", params);
+    }
+);
+
+Cypress.Commands.add("readGoogleSheetCell",
+    (params: {
+        spreadsheetId: string;
+        sheetName: string;
+        cellRef: string;
+    }) => {
+        return cy.task<string | null>("readGoogleSheetCell", params);
+    }
+);
+
+//#endregion
