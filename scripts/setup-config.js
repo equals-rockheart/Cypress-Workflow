@@ -22,6 +22,7 @@ function writeJson(file, obj) {
 
 // Directories
 ensureDir(path.join(ROOT_DIR, "cypress/config/env"));
+ensureDir(path.join(ROOT_DIR, "cypress/e2e/sprint"));
 ensureDir(path.join(ROOT_DIR, "secrets"));
 
 // Config files

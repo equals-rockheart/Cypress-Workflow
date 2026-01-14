@@ -275,11 +275,14 @@ npx cypress run --env configFile=develop,regression=true,disable=gsheets
 
 | Issue | Fix |
 |-------|-----|
-| "Invalid Google Sheet link" | Verify URL format + permissions |
-| "results-column not found in /cypress/config/regression-sheet.json" | Add `results-column` to config file |
-| "Google Sheet URL not found for the following tests" | Add `[sheet:URL]` tag to test or describe block or check config file |
-| "invalid row number" | Ensure cell reference uses valid number format `{3}` or `{Sheet!3}` |
-| Cell not updating | Ensure correct sheet and integration is not disabled` |
+| Webpack Compilation<br>Module not found: Error : Can't resolve '../../../cypress/e2e/sprint' | Create sprint folder in /cypress/e2e/ directory |
+| Requested entity not found | Verify URL value and format |
+| The caller does not have permission | Verify service account have permission |
+| Unable to parse range | Verify sheet name and range is correct |
+| results-column not found in /cypress/config/regression-sheet.json | Add `results-column` to config file |
+| Google Sheet URL not found for the following tests | Add `[sheet:URL]` tag to test or describe block or check config file |
+| invalid row number | Ensure cell reference uses valid number format `{3}` or `{Sheet!3}` |
+| Cell not updating | Ensure correct sheet and integration is not disabled |
 | Wrong sheet selected | Check directory-to-sheet mapping or use explicit `{SheetName!3}` |
 | Error messages not appearing | Verify `remarks-column` is configured in regression-sheet.json |
 | QATouch sync failing | Check case number prefix and `testRunKey` |
@@ -289,4 +292,4 @@ npx cypress run --env configFile=develop,regression=true,disable=gsheets
 
 *For sprint-focused testing, see the [Sprint Development guide](./sprint.md).*
 
-*Last updated: November 2025*
+*Last updated: January 2026*

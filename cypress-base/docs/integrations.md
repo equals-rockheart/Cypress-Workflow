@@ -167,16 +167,19 @@ npx cypress open --env configFile=develop,disable=all
 
 ## 🐞 Troubleshooting
 
-| Issue                       | Fix |
-| --------------------------- | --- |
-| "Invalid test run key"      | Verify QATouch run exists |
-| "Case number not found"     | Check test prefix matches QATouch case ID |
-| "Project key mismatch"      | Verify `projectKey-{suite}` in `qatouch.json` |
-| "Invalid Google Sheet link" | Verify URL format + permissions |
-| Cell not updating           | Ensure valid reference `{Sheet!Cell}` or `{Cell}` |
+| Issue | Fix |
+|-------|-----|
+| Webpack Compilation<br>Module not found: Error : Can't resolve '../../../cypress/e2e/sprint' | Create sprint folder in /cypress/e2e/ directory |
+| Requested entity not found | Verify URL value and format |
+| The caller does not have permission | Verify service account have permission |
+| Unable to parse range | Verify sheet name and range is correct |
+| Cell not updating | Ensure valid reference `{Sheet!Cell}` or `{Cell}` |
+| Invalid test run key | Verify QATouch run exists |
+| Case number not found | Check test prefix matches QATouch case ID |
+| Project key mismatch | Verify `projectKey-{suite}` in `qatouch.json` |
 
 ---
 
 *Use this guide with both [Sprint Development](./sprint.md) and [Regression Guide](./regression.md).*
 
-*Last updated: November 2025*
+*Last updated: January 2026*

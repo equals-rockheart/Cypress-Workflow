@@ -117,10 +117,11 @@ import '@integrations/sprintLoader'
 ```bash
 # Initialize project config & secrets
 # - Creates /cypress/config/env directory
+# - Creates /cypress/e2e/sprint directory
 # - Creates /secrets directory
 # - Generates cypress/config/qatouch.json (default structure)
 # - Generates cypress/config/regression-sheet.json (default structure)
-# - Generates cypress/config/env/env.json (default environment file)
+# - Generates cypress/config/env/staging.json (default environment file)
 npm --prefix ./cypress-workflow run setup:config
 ```
 
@@ -424,4 +425,4 @@ npm run clean
 
 ---
 
-*Last updated: November 2025*
+*Last updated: January 2026*
