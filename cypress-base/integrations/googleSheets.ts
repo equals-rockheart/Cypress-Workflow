@@ -218,12 +218,23 @@ Cypress.Commands.add("updateGoogleSheet",
 );
 
 Cypress.Commands.add("readGoogleSheetCell",
-    (params: {
+    ({ spreadsheetId, sheetName, cellRef }: {
         spreadsheetId: string;
         sheetName: string;
         cellRef: string;
     }) => {
-        return cy.task<string | null>("readGoogleSheetCell", params);
+        return cy.task<(string | null)[][]>("readGoogleSheet", { spreadsheetId, sheetName, range: cellRef })
+            .then(values => values?.[0]?.[0] ?? null);
+    }
+);
+
+Cypress.Commands.add("readGoogleSheetRange",
+    ({ spreadsheetId, sheetName, cellRange }: {
+        spreadsheetId: string;
+        sheetName: string;
+        cellRange: string;
+    }) => {
+        return cy.task<(string | null)[][]>("readGoogleSheet", { spreadsheetId, sheetName, range: cellRange });
     }
 );
 

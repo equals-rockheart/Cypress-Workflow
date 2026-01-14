@@ -63,7 +63,7 @@ export default defineConfig({
       // TODO: Write logs in file
       on("task", {
         updateGoogleSheet,
-        readGoogleSheetCell,
+        readGoogleSheet,
         integrationLog: ({ source, message }: { source: string; message: string }) => {
           console.log(`\x1b[0m[\x1b[36mCW\x1b[0m → ${source}] ${message}`);
           return null; // tasks must return something
@@ -119,15 +119,15 @@ async function updateGoogleSheet({
   return res.status; // 200 means success
 }
 
-async function readGoogleSheetCell({
+async function readGoogleSheet({
   spreadsheetId,
   sheetName,
-  cellRef,
+  range,
 }: {
   spreadsheetId: string;
   sheetName: string;
-  cellRef: string;
-}): Promise<string | null> {
+  range: string;
+}): Promise<(string | null)[][]> {
   const auth = new google.auth.GoogleAuth({
     keyFile: path.resolve(process.cwd(), "secrets/service-account.json"),
     scopes: ["https://www.googleapis.com/auth/spreadsheets.readonly"],
@@ -137,9 +137,10 @@ async function readGoogleSheetCell({
 
   const res = await sheets.spreadsheets.values.get({
     spreadsheetId,
-    range: `${sheetName}!${cellRef}`,
+    range: `${sheetName}!${range}`,
   });
 
-  // values is a 2D array: [[value]]
-  return res.data.values?.[0]?.[0] ?? null;
+  // Normalize missing values as null
+  const values = res.data.values ?? [];
+  return values.map(row => row.map(cell => cell ?? null));
 }
