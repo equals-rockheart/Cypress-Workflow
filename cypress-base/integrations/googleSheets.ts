@@ -67,7 +67,7 @@ function updateSheetStatus(testOrSuite: Mocha.Test | Mocha.Suite, status: string
         : Cypress.env("regression-test-fail");
 
     if (!resultsColumn) {
-        cy.task("integrationLog", { source: "gsheets", message: `\x1b[31mresults-column not found in /cypress/config/regression-sheet.json —\x1b[33m update skipped`});
+        cy.task("integrationLog", { source: "gsheets", message: `\x1b[31mresults-column not found in /cypress/config/regression.json —\x1b[33m update skipped`});
         return;
     }
 

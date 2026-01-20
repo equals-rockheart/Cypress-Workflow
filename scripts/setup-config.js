@@ -33,10 +33,13 @@ writeJson(path.join(ROOT_DIR, "cypress/config/qatouch.json"), {
   "regression-Suite-testRunKey": ""
 });
 
-writeJson(path.join(ROOT_DIR, "cypress/config/regression-sheet.json"), {
+writeJson(path.join(ROOT_DIR, "cypress/config/regression.json"), {
+  "ignore": [],
   "regression-sheet": "",
   "regression-test-pass": "✅",
-  "regression-test-fail": "❌"
+  "regression-test-fail": "❌",
+  "results-column": "D",
+  "remarks-column": "G"
 });
 
 writeJson(path.join(ROOT_DIR, "cypress/config/env/staging.json"), {

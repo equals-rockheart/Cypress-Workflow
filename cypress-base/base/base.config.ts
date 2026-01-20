@@ -12,7 +12,7 @@ export default defineConfig({
       const configFile: string = config.env.baseConfig || config.env.configFile || 'staging';
       const environmentConfig = getConfigurationByFile(`env/${configFile}`);
       const qatouchConfig = getConfigurationByFile("qatouch");
-      const regressionSheetConfig: Record<string, any> = getConfigurationByFile("regression-sheet");
+      const regressionConfig: Record<string, any> = getConfigurationByFile("regression");
 
       // Determine test mode and integrations
       const sprint: string = config.env.sprint || '';
@@ -20,6 +20,7 @@ export default defineConfig({
       const disable: string = config.env.disable || 'none';
 
       let specPattern: string | string[] = '';
+      const ignoreList: string[] = regressionConfig?.ignore || [];
 
       // Handle spec patterns
       if (sprint) {
@@ -28,9 +29,14 @@ export default defineConfig({
           : `cypress/e2e/sprint/${sprint}.cy.{js,jsx,ts,tsx}`;
       }
       else if (regression) {
+        const ignorePatterns = ignoreList.map(
+          (path) => `!${path}/**/*.cy.{js,jsx,ts,tsx}`
+        );
+
         specPattern = [
           'cypress/e2e/**/*.cy.{js,jsx,ts,tsx}',
-          '!cypress/e2e/sprint/**/*.cy.{js,jsx,ts,tsx}' // Exclude sprint folder
+          '!cypress/e2e/sprint/**/*.cy.{js,jsx,ts,tsx}', // Exclude sprint folder
+          ...ignorePatterns
         ];
       }
 
@@ -50,7 +56,7 @@ export default defineConfig({
         ...config.env,
         ...environmentConfig,
         ...qatouchConfig,
-        ...regressionSheetConfig,
+        ...regressionConfig,
         sprint,
         regression,
         disable,
