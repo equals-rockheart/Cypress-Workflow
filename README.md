@@ -43,7 +43,7 @@ git submodule add -b main https://github.com/equals-rockheart/cypress-workflow.g
 
 #### 2. Install Dependencies
 
-**Update `cypress/support/e2e.ts`:**
+**Update `package.json`:**
 ``` json
 {
   "devDependencies": {
@@ -120,7 +120,7 @@ import '@integrations/sprintLoader'
 # - Creates /cypress/e2e/sprint directory
 # - Creates /secrets directory
 # - Generates cypress/config/qatouch.json (default structure)
-# - Generates cypress/config/regression-sheet.json (default structure)
+# - Generates cypress/config/regression.json (default structure)
 # - Generates cypress/config/env/staging.json (default environment file)
 npm --prefix ./cypress-workflow run setup:config
 ```
@@ -160,7 +160,7 @@ Tests are organized by **suites** (admin, client, api) that map to **QATouch Pro
 | QATouch Config | `projectKey-{suite}` | `projectKey-admin` |
 | Test Directory | `e2e/{suite}/` | `e2e/admin/` |
 | Page Objects | `pages/{suite}/` | `pages/admin/` |
-| Describe Blocks | `describe("{Suite}", ...)` | `describe("Admin", ...)` |
+| Sprint Describe Blocks | `describe("{Suite}", ...)` | `describe("Admin", ...)` |
 
 ### Directory Structure
 ```
@@ -178,7 +178,8 @@ secrets/                   # Service account keys (gitignored)
 ### Adding New Test Suites
 1. Add `projectKey-{suite}` to `qatouch.json`
 2. Create directories: `e2e/{suite}/` and `pages/{suite}/`
-3. Use `describe("{Suite}", ...)` pattern in test files
+4. Create module: `support/modules/{suite}Module.ts`
+3. Use `describe("{Suite}", ...)` pattern in sprint test files
 
 ---
 
@@ -195,13 +196,13 @@ secrets/                   # Service account keys (gitignored)
 
 | Requirement     | Purpose                                                            |
 | --------------- | ------------------------------------------------------------------ |
-| **Case Number** | ✅ Required → syncs with QATouch                                    |
-| **Module Enum** | ✅ Required → enables regression mapping                            |
+| **Case Number** | ✅ Required → syncs with QATouch                                   |
+| **Module Enum** | ✅ Required → enables regression mapping                           |
 | **Enum Usage**  | ✅ Required → use predefined enums (e.g., `AdminModule.Dashboard`) |
 
 
 ```typescript
-describe("Admin", () => {
+describe("Admin", () => { // Suite name
   const ADMIN_testRunKey = "JG3KB"; // From QATouch Test Run
 
   // Required format: CaseNumber - [ModuleEnum] Test Title
@@ -253,7 +254,7 @@ npx cypress run --env configFile=develop,sprint=v26,disable=gsheets
 | Requirement         | Purpose                                                     |
 | ------------------- | ----------------------------------------------------------- |
 | **Case Number**     | 🟡 Optional → syncs with QATouch                  |
-| **Sheet Reference** | ✅ Required → syncs with Google Sheets |
+| **Sheet Reference** | 🟡 Required → syncs with Google Sheets (default: maps to `config/regression.json`) |
 | **Module Enum**     | ❌ Prohibited → module is already implied by spec file name  |
 
 ```ts
@@ -313,16 +314,21 @@ Edit `/cypress/config/qatouch.json`:
 
 ### Google Sheets Integration
 
-Configure `/cypress/config/regression-sheet.json`:
+Configure `/cypress/config/regression.json`:
 ```json
 {
-  "regression-sheet": "https://docs.google.com/spreadsheets/d/your-sheet-id",
+  "ignore": [
+    "cypress/e2e/ignore-folder",
+    "cypress/e2e/during-regression"
+  ],
+  "regression-sheet": "https://docs.google.com/spreadsheets/d/YOUR_DEFAULT_SHEET_ID/",
   "regression-test-pass": "✅",
   "regression-test-fail": "❌",
   "results-column": "D",
   "remarks-column": "G"
 }
 ```
+> **ignore**: List of folders excluded when running with `regression=true`; `cypress/e2e/sprint` is ignored by default.
 
 **Setup Steps**:
 1. Create Google Cloud Project & enable Sheets API
@@ -374,7 +380,7 @@ npm run clean
 
 **Sprint Development** (QATouch):
 - Use case numbers (required for sync)
-- Include module enums (required for loading)
+- Include module enums (required for loading sprint tests during regression)
 - Cross-suite testing in single files
 
 **Regression Testing** (Google Sheets):
@@ -396,7 +402,7 @@ npm run clean
 **Google Sheets Integration**:
 - Verify service account has Editor access
 - Check `/secrets/service-account.json` format
-- Validate sheet URL in `regression-sheet.json`
+- Validate sheet URL in `regression.json`
 
 **Sprint Cleaner**:
 ```bash

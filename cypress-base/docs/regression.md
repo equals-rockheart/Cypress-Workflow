@@ -137,8 +137,8 @@ describe("Sprint Tests", () => {
 ```typescript
 describe("Sprint Tests [sheet:https://docs.google.com/spreadsheets/d/CUSTOM_ID/]", () => {
     loadSprintTests({
-        testSuite: "Client",
-        module: "Transactions"
+        testSuite: "Admin",
+        module: AdminModule.Transactions
     });
     // All loaded sprint tests post to custom sheet
 });
@@ -147,11 +147,11 @@ describe("Sprint Tests [sheet:https://docs.google.com/spreadsheets/d/CUSTOM_ID/]
 **Test-Level Sheet/Cell Reference**:
 ```typescript
 // In sprint file - overrides both suite location and custom sheet URL
-it("53 - [User.Checkout] Widget Loads {User!8}", () => {
+it(`53 - [${User.Checkout}] Widget Loads {User!8}`, () => {
     expect(true).to.be.true; // Posts to User sheet at row 8 even if spec is located
 });
 
-it("17 - [User.Checkout] GCash Payment {Deposit!10} [sheet:https://docs.google.com/spreadsheets/d/OVERRIDE_ID/]", () => {
+it(`17 - [${User.Checkout}] GCash Payment {Deposit!10} [sheet:https://docs.google.com/spreadsheets/d/OVERRIDE_ID/]`, () => {
     expect(true).to.be.true; // Posts to override sheetURL at Deposit sheet at row 10
 });
 ```
@@ -196,9 +196,13 @@ Update `qatouch.json` with **suite-specific** `testRunKey` (**auto-resolved base
 ## ⚙️ Configuration Files Reference
 
 ### Google Sheets Integration
-`cypress/config/regression-sheet.json`
+`cypress/config/regression.json`
 ```json
 {
+  "ignore": [
+    "cypress/e2e/ignore-folder",
+    "cypress/e2e/during-regression"
+  ],
   "regression-sheet": "https://docs.google.com/spreadsheets/d/YOUR_DEFAULT_SHEET_ID/",
   "regression-test-pass": "✅",
   "regression-test-fail": "❌",
@@ -206,6 +210,7 @@ Update `qatouch.json` with **suite-specific** `testRunKey` (**auto-resolved base
   "remarks-column": "G"
 }
 ```
+> **ignore**: List of folders excluded when running with `regression=true`; `cypress/e2e/sprint` is ignored by default.
 
 ### QATouch Integration
 `cypress/config/qatouch.json`
@@ -279,12 +284,12 @@ npx cypress run --env configFile=develop,regression=true,disable=gsheets
 | Requested entity not found | Verify URL value and format |
 | The caller does not have permission | Verify service account have permission |
 | Unable to parse range | Verify sheet name and range is correct |
-| results-column not found in /cypress/config/regression-sheet.json | Add `results-column` to config file |
+| results-column not found in /cypress/config/regression.json | Add `results-column` to config file |
 | Google Sheet URL not found for the following tests | Add `[sheet:URL]` tag to test or describe block or check config file |
 | invalid row number | Ensure cell reference uses valid number format `{3}` or `{Sheet!3}` |
 | Cell not updating | Ensure correct sheet and integration is not disabled |
 | Wrong sheet selected | Check directory-to-sheet mapping or use explicit `{SheetName!3}` |
-| Error messages not appearing | Verify `remarks-column` is configured in regression-sheet.json |
+| Error messages not appearing | Verify `remarks-column` is configured in regression.json |
 | QATouch sync failing | Check case number prefix and `testRunKey` |
 | Sprint tests not loading | Verify module enum usage and suite name matching |
 

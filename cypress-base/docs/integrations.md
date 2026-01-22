@@ -65,9 +65,13 @@ describe("Dashboard {Home!9}", () => {});
 ---
 
 ### Configuration
-`cypress/config/regression-sheet.json`
+`cypress/config/regression.json`
 ```json
 {
+  "ignore": [
+    "cypress/e2e/ignore-folder",
+    "cypress/e2e/during-regression"
+  ],
   "regression-sheet": "https://docs.google.com/spreadsheets/d/YOUR_DEFAULT_SHEET_ID/",
   "regression-test-pass": "✅",
   "regression-test-fail": "❌",
@@ -75,6 +79,8 @@ describe("Dashboard {Home!9}", () => {});
   "remarks-column": "G"
 }
 ```
+> **ignore**: List of folders excluded when running with `regression=true`; `cypress/e2e/sprint` is ignored by default.
+
 ---
 
 ## 📋 QATouch Integration
