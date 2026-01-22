@@ -39,6 +39,8 @@ git init
 
 # Add cypress-workflow as submodule
 git submodule add -b main https://github.com/equals-rockheart/cypress-workflow.git cypress-workflow
+git add .gitmodules cypress-workflow
+git commit -m "chore: add cypress-workflow submodule"
 ```
 
 #### 2. Install Dependencies
@@ -90,7 +92,6 @@ export default defineConfig({
   },
 });
 ```
-
 
 #### Step 4: Setup TypeScript
 **Copy TypeScript config:**
@@ -144,7 +145,9 @@ npx cypress run --env configFile=develop,regression=true
 ### Updating Submodules
 
 ```bash
-git submodule update --remote --merge
+git submodule update --remote cypress-workflow
+git status
+git commit -am "chore: update cypress-workflow submodule"
 ```
 
 ---
@@ -241,7 +244,7 @@ npx cypress run --env configFile=develop,sprint=v25
 npx cypress run --env configFile=develop,sprint=v26,disable=gsheets
 ```
 
-> 📖 For more details, see the full [Sprint Development Guide↗](cypress-base/docs/sprint.md).
+> 📖 For more details, see the full [Sprint Development Guide↗](docs/sprint.md).
 
 ---
 
@@ -293,7 +296,7 @@ npx cypress run --env configFile=develop,regression=true
 npx cypress run --env configFile=develop,regression=true,disable=qatouch
 ```
 
-> 📖 *For more details, see the full  [Regression Development Guide↗](cypress-base/docs/regression.md)*
+> 📖 *For more details, see the full  [Regression Development Guide↗](docs/regression.md)*
 
 ---
 
@@ -345,7 +348,7 @@ Configure files in `/cypress/config/env/` for each environment:
   // Your other config
 }
 ```
-> 📖 *For more details, see the full [Integrations Guide↗](cypress-base/docs/integrations.md).*
+> 📖 *For more details, see the full [Integrations Guide↗](docs/integrations.md).*
 
 ---
 
@@ -424,9 +427,9 @@ npm run clean
 - [Cypress Typescript Configuration↗](https://docs.cypress.io/guides/tooling/typescript-support)
 
 ### Internal Resources
-- [Integrations↗](cypress-base/docs/integrations.md)
-- [Regression Development↗](cypress-base/docs/regression.md)
-- [Sprint Development↗](cypress-base/docs/sprint.md)
+- [Integrations↗](docs/integrations.md)
+- [Regression Development↗](docs/regression.md)
+- [Sprint Development↗](docs/sprint.md)
 - [QA Team Training Materials↗](https://oriental-wallet.atlassian.net/wiki/spaces/QA/pages/256147505/Training+Materials)
 
 ---
